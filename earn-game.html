@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coin Quest - Play Simple Games & Earn Coins (Demo)</title>
+<meta name="description" content="Coin Quest is a free browser game where you tap, spin and answer quizzes to earn virtual coins. A demo rewards app built with plain HTML, CSS and JavaScript.">
+<style>
+    :root {
+        --primary: #4361ee;
+        --secondary: #3a0ca3;
+        --accent: #f72585;
+        --gold: #ffb703;
+        --light: #f8f9fa;
+        --dark: #212529;
+        --success: #06d6a0;
+        --border-radius: 14px;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+        --transition: all 0.25s ease;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        color: var(--dark);
+        line-height: 1.6;
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    header {
+        text-align: center;
+        padding: 26px 0 10px;
+    }
+
+    header h1 {
+        font-size: 2.4rem;
+        margin-bottom: 10px;
+        background: linear-gradient(to right, var(--primary), var(--accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    header p {
+        max-width: 640px;
+        margin: 0 auto;
+        color: #495057;
+    }
+
+    .disclaimer {
+        background: #fff3cd;
+        border: 1px solid #ffe69c;
+        color: #664d03;
+        border-radius: var(--border-radius);
+        padding: 12px 18px;
+        margin: 18px 0;
+        font-size: 0.92rem;
+        text-align: center;
+    }
+
+    .wallet-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        justify-content: center;
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 18px;
+        margin-bottom: 22px;
+    }
+
+    .stat {
+        flex: 1 1 140px;
+        text-align: center;
+        padding: 10px;
+    }
+
+    .stat .value {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--secondary);
+    }
+
+    .stat .label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    .tab-btn {
+        background: white;
+        border: 2px solid transparent;
+        padding: 10px 18px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--secondary);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        transition: var(--transition);
+    }
+
+    .tab-btn.active {
+        background: linear-gradient(to right, var(--primary), var(--accent));
+        color: white;
+    }
+
+    .card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 28px;
+        margin-bottom: 22px;
+        display: none;
+    }
+
+    .card.active {
+        display: block;
+    }
+
+    .card h2 {
+        color: var(--secondary);
+        margin-bottom: 6px;
+    }
+
+    .card .sub {
+        color: #6c757d;
+        margin-bottom: 20px;
+        font-size: 0.95rem;
+    }
+
+    /* Tap game */
+    .tap-zone {
+        text-align: center;
+    }
+
+    #tapButton {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        border: none;
+        background: radial-gradient(circle at 30% 30%, var(--gold), #e08e00);
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 12px 24px rgba(224,142,0,0.4);
+        transition: transform 0.08s ease;
+        user-select: none;
+    }
+
+    #tapButton:active {
+        transform: scale(0.94);
+    }
+
+    #tapButton:disabled {
+        background: #ced4da;
+        box-shadow: none;
+        cursor: not-allowed;
+    }
+
+    .energy-bar-outer {
+        width: 100%;
+        max-width: 360px;
+        margin: 20px auto 0;
+        height: 14px;
+        background: #e9ecef;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .energy-bar-inner {
+        height: 100%;
+        background: linear-gradient(to right, var(--success), #17a673);
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+
+    /* Spin wheel */
+    .wheel-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .wheel {
+        width: 260px;
+        height: 260px;
+        border-radius: 50%;
+        border: 8px solid white;
+        box-shadow: 0 0 0 4px var(--secondary), var(--shadow);
+        position: relative;
+        transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+        background: conic-gradient(
+            #4361ee 0deg 45deg,
+            #f72585 45deg 90deg,
+            #ffb703 90deg 135deg,
+            #06d6a0 135deg 180deg,
+            #3a0ca3 180deg 225deg,
+            #e63946 225deg 270deg,
+            #4cc9f0 270deg 315deg,
+            #7209b7 315deg 360deg
+        );
+    }
+
+    .wheel-labels {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+    }
+
+    .wheel-labels span {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform-origin: 0 0;
+        color: white;
+        font-weight: 700;
+        font-size: 0.9rem;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    }
+
+    .pointer {
+        width: 0;
+        height: 0;
+        border-left: 14px solid transparent;
+        border-right: 14px solid transparent;
+        border-top: 22px solid var(--dark);
+        margin-bottom: -6px;
+    }
+
+    /* Quiz */
+    .quiz-question {
+        font-weight: 600;
+        margin-bottom: 14px;
+        font-size: 1.05rem;
+    }
+
+    .quiz-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .quiz-option {
+        padding: 12px;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        background: var(--light);
+        cursor: pointer;
+        text-align: left;
+        transition: var(--transition);
+    }
+
+    .quiz-option:hover {
+        border-color: var(--primary);
+    }
+
+    .quiz-option.correct {
+        background: #d1fae5;
+        border-color: var(--success);
+    }
+
+    .quiz-option.wrong {
+        background: #fee2e2;
+        border-color: #ef4444;
+    }
+
+    /* Buttons */
+    .btn {
+        display: inline-block;
+        background: linear-gradient(to right, var(--primary), var(--secondary));
+        color: white;
+        border: none;
+        padding: 12px 26px;
+        border-radius: 999px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn:disabled {
+        background: #ced4da;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .btn-block {
+        display: block;
+        width: 100%;
+        text-align: center;
+    }
+
+    .center {
+        text-align: center;
+    }
+
+    .cooldown-note {
+        margin-top: 10px;
+        font-size: 0.85rem;
+        color: #6c757d;
+        text-align: center;
+    }
+
+    /* Redeem */
+    .badges {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .badge {
+        border: 2px solid #e9ecef;
+        border-radius: var(--border-radius);
+        padding: 18px;
+        text-align: center;
+    }
+
+    .badge .icon {
+        font-size: 2rem;
+    }
+
+    .badge h3 {
+        margin: 8px 0 4px;
+        color: var(--secondary);
+    }
+
+    .badge .cost {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+    }
+
+    .badge.unlocked {
+        border-color: var(--success);
+        background: #ecfdf5;
+    }
+
+    /* Log */
+    .log-list {
+        max-height: 220px;
+        overflow-y: auto;
+        border-top: 1px solid #e9ecef;
+        margin-top: 10px;
+    }
+
+    .log-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 4px;
+        border-bottom: 1px solid #f1f3f5;
+        font-size: 0.9rem;
+    }
+
+    .log-item .coins {
+        font-weight: 700;
+        color: var(--success);
+    }
+
+    .log-item .coins.neg {
+        color: #ef4444;
+    }
+
+    footer {
+        text-align: center;
+        color: #6c757d;
+        font-size: 0.85rem;
+        margin: 30px 0 10px;
+    }
+
+    @media (max-width: 480px) {
+        .quiz-options {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>🪙 Coin Quest</h1>
+        <p>Tap, spin and answer quiz questions to earn coins. Level up, keep your daily streak alive, and unlock reward badges.</p>
+    </header>
+
+    <div class="disclaimer">
+        This is a self-contained demo game. Coins are virtual points stored only in your browser
+        (<code>localStorage</code>) — there is no real money, ads, or payment processing involved.
+    </div>
+
+    <div class="wallet-bar">
+        <div class="stat">
+            <div class="value" id="statCoins">0</div>
+            <div class="label">Coins</div>
+        </div>
+        <div class="stat">
+            <div class="value" id="statLevel">1</div>
+            <div class="label">Level</div>
+        </div>
+        <div class="stat">
+            <div class="value" id="statStreak">0</div>
+            <div class="label">Day Streak</div>
+        </div>
+        <div class="stat">
+            <div class="value" id="statBadges">0/4</div>
+            <div class="label">Badges</div>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="tap">👆 Tap to Earn</button>
+        <button class="tab-btn" data-tab="spin">🎡 Spin Wheel</button>
+        <button class="tab-btn" data-tab="quiz">🧠 Quiz Challenge</button>
+        <button class="tab-btn" data-tab="daily">📅 Daily Bonus</button>
+        <button class="tab-btn" data-tab="redeem">🎁 Redeem</button>
+    </div>
+
+    <div class="card active" id="tab-tap">
+        <h2>Tap to Earn</h2>
+        <p class="sub">Each tap uses 1 energy and earns 2 coins. Energy recharges 1 point every 30 seconds.</p>
+        <div class="tap-zone">
+            <button id="tapButton">TAP<br>+2 coins</button>
+            <div class="energy-bar-outer"><div class="energy-bar-inner" id="energyBar"></div></div>
+            <div class="cooldown-note" id="energyNote">Energy: 50 / 50</div>
+        </div>
+    </div>
+
+    <div class="card" id="tab-spin">
+        <h2>Spin the Wheel</h2>
+        <p class="sub">Free spin every 30 minutes. Land on a slice and collect the coins shown.</p>
+        <div class="wheel-wrap">
+            <div class="pointer"></div>
+            <div class="wheel" id="wheel">
+                <div class="wheel-labels" id="wheelLabels"></div>
+            </div>
+            <button class="btn" id="spinButton">Spin Now</button>
+            <div class="cooldown-note" id="spinNote"></div>
+        </div>
+    </div>
+
+    <div class="card" id="tab-quiz">
+        <h2>Quiz Challenge</h2>
+        <p class="sub">Answer up to 5 questions per day. Correct answers earn 30 coins each.</p>
+        <div id="quizArea"></div>
+    </div>
+
+    <div class="card" id="tab-daily">
+        <h2>Daily Bonus</h2>
+        <p class="sub">Claim once every calendar day to build your streak. Reward grows with your streak, up to a cap.</p>
+        <div class="center">
+            <div style="font-size:2.2rem;margin-bottom:10px;">🔥 Streak: <span id="dailyStreakDisplay">0</span> days</div>
+            <button class="btn" id="dailyButton">Claim Daily Bonus</button>
+            <div class="cooldown-note" id="dailyNote"></div>
+        </div>
+    </div>
+
+    <div class="card" id="tab-redeem">
+        <h2>Redeem Badges</h2>
+        <p class="sub">Spend coins on demo reward badges. This simply deducts coins and logs a redemption — no real-world value is transferred.</p>
+        <div class="badges" id="badgeArea"></div>
+    </div>
+
+    <div class="card" id="tab-log" style="display:block;">
+        <h2>Activity Log</h2>
+        <div class="log-list" id="logList"></div>
+    </div>
+
+    <footer>
+        Coin Quest — a demo tap/spin/quiz rewards game. Built with plain HTML, CSS and JavaScript. No data leaves your browser.
+    </footer>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    var STORAGE_KEY = 'coinQuestState';
+    var ENERGY_MAX = 50;
+    var ENERGY_RECHARGE_MS = 30 * 1000;
+    var SPIN_COOLDOWN_MS = 30 * 60 * 1000;
+    var QUIZ_DAILY_LIMIT = 5;
+    var LOG_LIMIT = 30;
+
+    var WHEEL_VALUES = [10, 25, 5, 50, 15, 100, 20, 200];
+
+    var QUESTIONS = [
+        { q: 'What color do you get by mixing blue and yellow?', options: ['Green', 'Purple', 'Orange', 'Red'], answer: 0 },
+        { q: 'How many continents are there on Earth?', options: ['5', '6', '7', '8'], answer: 2 },
+        { q: 'What is the largest planet in our solar system?', options: ['Earth', 'Saturn', 'Jupiter', 'Mars'], answer: 2 },
+        { q: 'Which language is primarily used to style web pages?', options: ['HTML', 'CSS', 'SQL', 'Python'], answer: 1 },
+        { q: 'What is the capital of Japan?', options: ['Seoul', 'Beijing', 'Tokyo', 'Bangkok'], answer: 2 },
+        { q: 'How many sides does a hexagon have?', options: ['5', '6', '7', '8'], answer: 1 },
+        { q: 'What gas do plants absorb from the atmosphere?', options: ['Oxygen', 'Nitrogen', 'Carbon Dioxide', 'Helium'], answer: 2 },
+        { q: 'Which ocean is the largest?', options: ['Atlantic', 'Indian', 'Arctic', 'Pacific'], answer: 3 },
+        { q: 'What is the boiling point of water at sea level (Celsius)?', options: ['90', '100', '110', '120'], answer: 1 },
+        { q: 'Which animal is known as the King of the Jungle?', options: ['Tiger', 'Lion', 'Elephant', 'Bear'], answer: 1 },
+        { q: 'How many players are on a standard soccer team on the field?', options: ['9', '10', '11', '12'], answer: 2 },
+        { q: 'What is H2O commonly known as?', options: ['Salt', 'Water', 'Sugar', 'Oxygen'], answer: 1 },
+        { q: 'Which planet is known as the Red Planet?', options: ['Venus', 'Mars', 'Mercury', 'Neptune'], answer: 1 },
+        { q: 'What do bees produce?', options: ['Milk', 'Silk', 'Honey', 'Wax only'], answer: 2 },
+        { q: 'How many minutes are in two hours?', options: ['100', '110', '120', '130'], answer: 2 }
+    ];
+
+    var BADGES = [
+        { id: 'bronze', icon: '🥉', name: 'Bronze Badge', cost: 300 },
+        { id: 'silver', icon: '🥈', name: 'Silver Badge', cost: 1000 },
+        { id: 'gold', icon: '🥇', name: 'Gold Badge', cost: 3000 },
+        { id: 'platinum', icon: '💎', name: 'Platinum Badge', cost: 7000 }
+    ];
+
+    function defaultState() {
+        return {
+            coins: 0,
+            totalEarned: 0,
+            energy: ENERGY_MAX,
+            lastEnergyTick: Date.now(),
+            lastSpinAt: 0,
+            quizDate: '',
+            quizAnsweredToday: 0,
+            quizIndex: 0,
+            dailyLastClaim: '',
+            dailyStreak: 0,
+            unlockedBadges: [],
+            log: []
+        };
+    }
+
+    function todayKey() {
+        var d = new Date();
+        return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+    }
+
+    function dayDiff(a, b) {
+        var da = new Date(a), db = new Date(b);
+        return Math.round((db - da) / 86400000);
+    }
+
+    function loadState() {
+        var raw;
+        try {
+            raw = localStorage.getItem(STORAGE_KEY);
+        } catch (e) {
+            raw = null;
+        }
+        if (!raw) return defaultState();
+        try {
+            var parsed = JSON.parse(raw);
+            var base = defaultState();
+            for (var k in base) {
+                if (parsed[k] === undefined) parsed[k] = base[k];
+            }
+            return parsed;
+        } catch (e) {
+            return defaultState();
+        }
+    }
+
+    var state = loadState();
+
+    function save() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) { /* storage unavailable, ignore */ }
+    }
+
+    function addLog(text, coinsDelta) {
+        state.log.unshift({ text: text, coins: coinsDelta, at: Date.now() });
+        if (state.log.length > LOG_LIMIT) state.log.length = LOG_LIMIT;
+    }
+
+    function addCoins(amount, reason) {
+        state.coins += amount;
+        if (amount > 0) state.totalEarned += amount;
+        addLog(reason, amount);
+        save();
+        renderStats();
+        renderLog();
+    }
+
+    function levelForCoins(totalEarned) {
+        return Math.floor(totalEarned / 500) + 1;
+    }
+
+    function renderStats() {
+        document.getElementById('statCoins').textContent = state.coins.toLocaleString();
+        document.getElementById('statLevel').textContent = levelForCoins(state.totalEarned);
+        document.getElementById('statStreak').textContent = state.dailyStreak;
+        document.getElementById('statBadges').textContent = state.unlockedBadges.length + '/' + BADGES.length;
+    }
+
+    function renderLog() {
+        var list = document.getElementById('logList');
+        if (!state.log.length) {
+            list.innerHTML = '<div class="log-item">No activity yet — start tapping, spinning or answering questions!</div>';
+            return;
+        }
+        list.innerHTML = state.log.map(function (item) {
+            var cls = item.coins < 0 ? 'coins neg' : 'coins';
+            var sign = item.coins > 0 ? '+' : '';
+            var time = new Date(item.at).toLocaleTimeString();
+            return '<div class="log-item"><span>' + escapeHtml(item.text) + ' <small style="color:#adb5bd;">(' + time + ')</small></span><span class="' + cls + '">' + sign + item.coins + '</span></div>';
+        }).join('');
+    }
+
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    // ---------- Tabs ----------
+    var tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            tabButtons.forEach(function (b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            document.querySelectorAll('.card').forEach(function (c) {
+                if (c.id === 'tab-log') return;
+                c.classList.remove('active');
+            });
+            document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+        });
+    });
+
+    // ---------- Energy / Tap game ----------
+    function rechargeEnergy() {
+        var now = Date.now();
+        var elapsed = now - state.lastEnergyTick;
+        var gained = Math.floor(elapsed / ENERGY_RECHARGE_MS);
+        if (gained > 0 && state.energy < ENERGY_MAX) {
+            state.energy = Math.min(ENERGY_MAX, state.energy + gained);
+            state.lastEnergyTick += gained * ENERGY_RECHARGE_MS;
+            save();
+        }
+        if (state.energy >= ENERGY_MAX) {
+            state.lastEnergyTick = now;
+        }
+    }
+
+    function renderEnergy() {
+        rechargeEnergy();
+        var pct = (state.energy / ENERGY_MAX) * 100;
+        document.getElementById('energyBar').style.width = pct + '%';
+        var tapBtn = document.getElementById('tapButton');
+        if (state.energy <= 0) {
+            var msLeft = ENERGY_RECHARGE_MS - (Date.now() - state.lastEnergyTick);
+            var secs = Math.max(0, Math.ceil(msLeft / 1000));
+            document.getElementById('energyNote').textContent = 'Out of energy — next point in ' + secs + 's';
+            tapBtn.disabled = true;
+        } else {
+            document.getElementById('energyNote').textContent = 'Energy: ' + state.energy + ' / ' + ENERGY_MAX;
+            tapBtn.disabled = false;
+        }
+    }
+
+    document.getElementById('tapButton').addEventListener('click', function () {
+        rechargeEnergy();
+        if (state.energy <= 0) return;
+        state.energy -= 1;
+        addCoins(2, 'Tapped to earn');
+        renderEnergy();
+    });
+
+    // ---------- Spin wheel ----------
+    var wheelLabels = document.getElementById('wheelLabels');
+    WHEEL_VALUES.forEach(function (val, i) {
+        var angle = i * 45 + 22.5;
+        var span = document.createElement('span');
+        span.textContent = val;
+        span.style.transform = 'rotate(' + angle + 'deg) translate(70px, -8px)';
+        wheelLabels.appendChild(span);
+    });
+
+    var currentRotation = 0;
+
+    function renderSpin() {
+        var remaining = SPIN_COOLDOWN_MS - (Date.now() - state.lastSpinAt);
+        var btn = document.getElementById('spinButton');
+        var note = document.getElementById('spinNote');
+        if (remaining > 0) {
+            btn.disabled = true;
+            var mins = Math.floor(remaining / 60000);
+            var secs = Math.floor((remaining % 60000) / 1000);
+            note.textContent = 'Next free spin in ' + mins + 'm ' + secs + 's';
+        } else {
+            btn.disabled = false;
+            note.textContent = 'Spin is ready!';
+        }
+    }
+
+    document.getElementById('spinButton').addEventListener('click', function () {
+        if (Date.now() - state.lastSpinAt < SPIN_COOLDOWN_MS) return;
+        var idx = Math.floor(Math.random() * WHEEL_VALUES.length);
+        var sliceCenter = idx * 45 + 22.5;
+        var extraSpins = 4 * 360;
+        var target = extraSpins - sliceCenter;
+        currentRotation += 360 - ((currentRotation + target) % 360) + target;
+        var wheel = document.getElementById('wheel');
+        wheel.style.transform = 'rotate(' + currentRotation + 'deg)';
+        state.lastSpinAt = Date.now();
+        save();
+        renderSpin();
+        setTimeout(function () {
+            addCoins(WHEEL_VALUES[idx], 'Spin wheel reward');
+        }, 4100);
+        var spinTimer = setInterval(function () {
+            renderSpin();
+            if (Date.now() - state.lastSpinAt >= SPIN_COOLDOWN_MS) clearInterval(spinTimer);
+        }, 1000);
+    });
+
+    // ---------- Quiz ----------
+    function ensureQuizDay() {
+        var t = todayKey();
+        if (state.quizDate !== t) {
+            state.quizDate = t;
+            state.quizAnsweredToday = 0;
+            save();
+        }
+    }
+
+    function renderQuiz() {
+        ensureQuizDay();
+        var area = document.getElementById('quizArea');
+        if (state.quizAnsweredToday >= QUIZ_DAILY_LIMIT) {
+            area.innerHTML = '<p>You have answered ' + QUIZ_DAILY_LIMIT + ' questions today. Come back tomorrow for more!</p>';
+            return;
+        }
+        var q = QUESTIONS[state.quizIndex % QUESTIONS.length];
+        var html = '<div class="quiz-question">Q' + (state.quizAnsweredToday + 1) + '/' + QUIZ_DAILY_LIMIT + ': ' + escapeHtml(q.q) + '</div>';
+        html += '<div class="quiz-options">';
+        q.options.forEach(function (opt, i) {
+            html += '<div class="quiz-option" data-index="' + i + '">' + escapeHtml(opt) + '</div>';
+        });
+        html += '</div>';
+        area.innerHTML = html;
+
+        var opts = area.querySelectorAll('.quiz-option');
+        opts.forEach(function (el) {
+            el.addEventListener('click', function () {
+                opts.forEach(function (o) { o.style.pointerEvents = 'none'; });
+                var chosen = parseInt(el.dataset.index, 10);
+                if (chosen === q.answer) {
+                    el.classList.add('correct');
+                    addCoins(30, 'Quiz correct answer');
+                } else {
+                    el.classList.add('wrong');
+                    opts[q.answer].classList.add('correct');
+                    addLog('Quiz wrong answer', 0);
+                    renderLog();
+                }
+                state.quizAnsweredToday += 1;
+                state.quizIndex += 1;
+                save();
+                renderStats();
+                setTimeout(renderQuiz, 1200);
+            });
+        });
+    }
+
+    // ---------- Daily bonus ----------
+    function renderDaily() {
+        document.getElementById('dailyStreakDisplay').textContent = state.dailyStreak;
+        var t = todayKey();
+        var btn = document.getElementById('dailyButton');
+        var note = document.getElementById('dailyNote');
+        if (state.dailyLastClaim === t) {
+            btn.disabled = true;
+            note.textContent = 'Already claimed today — come back tomorrow.';
+        } else {
+            btn.disabled = false;
+            note.textContent = 'Reward: ' + Math.min(20 + state.dailyStreak * 5, 100) + ' coins for today.';
+        }
+    }
+
+    document.getElementById('dailyButton').addEventListener('click', function () {
+        var t = todayKey();
+        if (state.dailyLastClaim === t) return;
+        if (state.dailyLastClaim) {
+            var diff = dayDiff(state.dailyLastClaim, t);
+            state.dailyStreak = (diff === 1) ? state.dailyStreak + 1 : 1;
+        } else {
+            state.dailyStreak = 1;
+        }
+        state.dailyLastClaim = t;
+        var reward = Math.min(20 + (state.dailyStreak - 1) * 5, 100);
+        save();
+        addCoins(reward, 'Daily bonus (streak ' + state.dailyStreak + ')');
+        renderDaily();
+    });
+
+    // ---------- Redeem badges ----------
+    function renderBadges() {
+        var area = document.getElementById('badgeArea');
+        area.innerHTML = BADGES.map(function (b) {
+            var unlocked = state.unlockedBadges.indexOf(b.id) !== -1;
+            var canAfford = state.coins >= b.cost;
+            var buttonHtml = unlocked
+                ? '<span style="color:#06d6a0;font-weight:700;">Unlocked ✓</span>'
+                : '<button class="btn" data-badge="' + b.id + '" ' + (canAfford ? '' : 'disabled') + '>Redeem for ' + b.cost + '</button>';
+            return '<div class="badge ' + (unlocked ? 'unlocked' : '') + '">' +
+                '<div class="icon">' + b.icon + '</div>' +
+                '<h3>' + b.name + '</h3>' +
+                '<div class="cost">' + b.cost + ' coins</div>' +
+                buttonHtml +
+                '</div>';
+        }).join('');
+
+        area.querySelectorAll('button[data-badge]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var id = btn.dataset.badge;
+                var badge = BADGES.filter(function (b) { return b.id === id; })[0];
+                if (!badge || state.coins < badge.cost || state.unlockedBadges.indexOf(id) !== -1) return;
+                state.unlockedBadges.push(id);
+                save();
+                addCoins(-badge.cost, 'Redeemed ' + badge.name);
+                renderBadges();
+            });
+        });
+    }
+
+    // ---------- Init ----------
+    function tick() {
+        renderEnergy();
+        renderSpin();
+    }
+
+    renderStats();
+    renderLog();
+    renderEnergy();
+    renderSpin();
+    renderQuiz();
+    renderDaily();
+    renderBadges();
+
+    setInterval(tick, 1000);
+})();
+</script>
+</body>
+</html>
