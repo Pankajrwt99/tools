@@ -253,10 +253,98 @@
     body{background:#fff;color:#000;}
     main{padding:0;}
   }
+
+  /* Auth / login */
+  body:not(.logged-in) .app-shell{display:none;}
+  body.logged-in #loginScreen{display:none;}
+  #loginScreen{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(160deg,var(--bg),var(--surface-2));padding:24px;
+  }
+  .login-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    box-shadow:var(--shadow-lg);padding:32px;max-width:420px;width:100%;
+  }
+  .login-brand{text-align:center;margin-bottom:22px;}
+  .login-brand .logo{
+    width:52px;height:52px;border-radius:14px;background:linear-gradient(120deg,var(--primary),var(--accent));
+    display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 12px;color:#fff;
+  }
+  .login-brand h1{font-size:1.15rem;}
+  .login-brand p{font-size:.82rem;color:var(--text-muted);margin-top:4px;}
+  #bootstrapPane h2, #loginPane h2{font-size:1rem;margin-bottom:6px;}
+  #bootstrapPane .sub{font-size:.8rem;color:var(--text-muted);margin-bottom:16px;}
+  #bootstrapForm, #loginForm{display:flex;flex-direction:column;gap:14px;}
+  .shift-context-banner{
+    background:var(--surface-2);border:1px solid var(--border);border-radius:8px;
+    padding:10px 12px;font-size:.8rem;margin-bottom:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  }
+  .form-msg{font-size:.8rem;padding:9px 11px;border-radius:6px;display:none;line-height:1.4;}
+  .form-msg.show{display:block;}
+  .form-msg.error{background:#fdeceb;color:var(--critical);}
+  .form-msg.success{background:#e6f7ec;color:var(--resolved);}
+  [data-theme="dark"] .form-msg.error{background:#3a1f22;}
+  [data-theme="dark"] .form-msg.success{background:#193a26;}
+
+  /* Shift-type & leave-status badges */
+  .badge.shift-Morning{background:#fff4e0;color:#a8650b;} .badge.shift-Morning::before{background:#f2a93b;}
+  .badge.shift-Evening{background:#e8f0ff;color:#2554c7;} .badge.shift-Evening::before{background:#4d7cf0;}
+  .badge.shift-Night{background:#ece7fb;color:#5b3fae;} .badge.shift-Night::before{background:#8f6fe0;}
+  [data-theme="dark"] .badge.shift-Morning{background:#3a2c1c;}
+  [data-theme="dark"] .badge.shift-Evening{background:#1c2a3a;}
+  [data-theme="dark"] .badge.shift-Night{background:#2a2038;}
+  .badge.lv-Recorded{background:#eef0f3;color:var(--closed);} .badge.lv-Recorded::before{background:var(--closed);}
+  .badge.lv-Approved{background:#e6f7ec;color:var(--resolved);} .badge.lv-Approved::before{background:var(--resolved);}
+  .badge.lv-Rejected{background:#fdeceb;color:var(--critical);} .badge.lv-Rejected::before{background:var(--critical);}
+  [data-theme="dark"] .badge.lv-Approved{background:#193a26;}
+  [data-theme="dark"] .badge.lv-Rejected{background:#3a1f22;}
 </style>
 </head>
 <body>
 
+<section id="loginScreen">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="logo">🛠️</div>
+      <h1>Shift Operations Manager</h1>
+      <p>Sign in with your shift roster credentials</p>
+    </div>
+
+    <div id="bootstrapPane">
+      <h2>Set up the first Supervisor account</h2>
+      <p class="sub">No engineers are registered yet. Create a supervisor account to manage the shift rota, engineers and leave records.</p>
+      <form id="bootstrapForm">
+        <div class="field"><label>Full Name</label><input type="text" id="bsName" required placeholder="e.g. Alex Rivera"></div>
+        <div class="field"><label>Employee ID</label><input type="text" id="bsEmpId" placeholder="e.g. EMP-001"></div>
+        <div class="field-row">
+          <div class="field"><label>Set PIN (4-6 digits)</label><input type="password" id="bsPin" inputmode="numeric" pattern="[0-9]{4,6}" autocomplete="off" required placeholder="••••"></div>
+          <div class="field"><label>Confirm PIN</label><input type="password" id="bsPinConfirm" inputmode="numeric" pattern="[0-9]{4,6}" autocomplete="off" required placeholder="••••"></div>
+        </div>
+        <div class="form-msg" id="bootstrapMsg"></div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Create Supervisor Account</button>
+      </form>
+    </div>
+
+    <div id="loginPane" style="display:none;">
+      <h2>Log in</h2>
+      <div class="shift-context-banner" id="shiftContextBanner"></div>
+      <form id="loginForm">
+        <div class="field">
+          <label>Engineer</label>
+          <select id="loginEngineerSelect" required></select>
+        </div>
+        <div class="field">
+          <label>PIN</label>
+          <input type="password" id="loginPin" inputmode="numeric" pattern="[0-9]{4,6}" autocomplete="off" required placeholder="••••">
+        </div>
+        <div class="form-msg" id="loginMsg"></div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Log In</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<div class="app-shell">
 <header class="appbar">
   <div class="brand">
     <div class="logo">🛠️</div>
@@ -266,10 +354,12 @@
     </div>
   </div>
   <div class="header-actions">
+    <div class="active-shift-pill" id="sessionPill"></div>
     <div class="active-shift-pill" id="activeShiftPill"><span class="dot"></span><span>No active shift</span></div>
     <button class="icon-btn" id="themeToggle" title="Toggle theme">🌓 Theme</button>
-    <button class="icon-btn" id="demoBtn" title="Load sample data">✨ Load Demo Data</button>
-    <button class="icon-btn" id="resetBtn" title="Clear all data">🗑️ Reset</button>
+    <button class="icon-btn" id="demoBtn" data-supervisor-only="1" title="Load sample data">✨ Load Demo Data</button>
+    <button class="icon-btn" id="resetBtn" data-supervisor-only="1" title="Clear all data">🗑️ Reset</button>
+    <button class="icon-btn" id="logoutBtn" title="Log out">🚪 Logout</button>
   </div>
 </header>
 
@@ -277,7 +367,10 @@
   <button data-tab="dashboard" class="active">📊 Dashboard</button>
   <button data-tab="issues">🐞 Defects &amp; Problems</button>
   <button data-tab="shifts">🕒 Shifts</button>
+  <button data-tab="leaves">🗓️ Leaves</button>
   <button data-tab="reports">📄 Reports</button>
+  <button data-tab="engineers" data-supervisor-only="1">👷 Engineers</button>
+  <button data-tab="rota" data-supervisor-only="1">📋 Rota</button>
 </nav>
 
 <main>
@@ -390,6 +483,141 @@
     </div>
 
     <div class="card" id="handoverPreview" style="margin-top:16px;"></div>
+  </section>
+
+  <!-- LEAVES -->
+  <section class="view" id="view-leaves">
+    <div class="toolbar">
+      <div>
+        <h2>Leave Records</h2>
+        <div class="sub" id="leavesSub">Your leave history — kept with you across shift changes</div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3 id="leaveFormTitle">Record Leave</h3>
+        <form id="leaveForm" style="display:flex;flex-direction:column;gap:12px;">
+          <input type="hidden" id="leaveId">
+          <div class="field" id="leaveEngineerField" style="display:none;">
+            <label>Engineer</label>
+            <select id="leaveEngineerInput"></select>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>From</label><input type="date" id="leaveFromInput" required></div>
+            <div class="field"><label>To</label><input type="date" id="leaveToInput" required></div>
+          </div>
+          <div class="field">
+            <label>Type</label>
+            <select id="leaveTypeInput">
+              <option>Casual</option><option>Sick</option><option>Earned</option><option>Comp-off</option><option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Reason</label>
+            <textarea id="leaveReasonInput" placeholder="Optional"></textarea>
+          </div>
+          <div class="form-msg" id="leaveFormMsg"></div>
+          <div style="display:flex;gap:10px;">
+            <button type="submit" class="btn btn-primary">Save Leave</button>
+            <button type="button" class="btn btn-ghost" id="leaveFormCancel" style="display:none;">Cancel Edit</button>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <h3>Records</h3>
+        <div class="filters no-print" id="leaveFilterWrap" style="display:none;">
+          <select id="fltLeaveEngineer"><option value="">All engineers</option></select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Engineer</th><th>From</th><th>To</th><th>Type</th><th>Status</th><th>Reason</th><th></th></tr></thead>
+            <tbody id="leavesTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ENGINEERS -->
+  <section class="view" id="view-engineers">
+    <div class="toolbar">
+      <div>
+        <h2>Engineers</h2>
+        <div class="sub">Manage engineer accounts and login PINs</div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3 id="engineerFormTitle">Add Engineer</h3>
+        <form id="engineerForm" style="display:flex;flex-direction:column;gap:12px;">
+          <input type="hidden" id="engineerId">
+          <div class="field"><label>Full Name</label><input type="text" id="engNameInput" required></div>
+          <div class="field"><label>Employee ID</label><input type="text" id="engEmpIdInput"></div>
+          <div class="field-row">
+            <div class="field">
+              <label>Role</label>
+              <select id="engRoleInput"><option value="engineer">Engineer</option><option value="supervisor">Supervisor</option></select>
+            </div>
+            <div class="field">
+              <label>PIN (4-6 digits)</label>
+              <input type="password" id="engPinInput" inputmode="numeric" pattern="[0-9]{4,6}" autocomplete="off" placeholder="Required, 4-6 digits">
+            </div>
+          </div>
+          <div class="form-msg" id="engineerFormMsg"></div>
+          <div style="display:flex;gap:10px;">
+            <button type="submit" class="btn btn-primary">Save Engineer</button>
+            <button type="button" class="btn btn-ghost" id="engineerFormCancel" style="display:none;">Cancel Edit</button>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <h3>All Engineers</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Employee ID</th><th>Role</th><th></th></tr></thead>
+            <tbody id="engineersTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROTA -->
+  <section class="view" id="view-rota">
+    <div class="toolbar">
+      <div>
+        <h2>Shift Rota</h2>
+        <div class="sub">Assign engineers to shifts — only rostered engineers can log in during that shift</div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3 id="rotaFormTitle">Add Rota Entry</h3>
+        <form id="rotaForm" style="display:flex;flex-direction:column;gap:12px;">
+          <input type="hidden" id="rotaId">
+          <div class="field"><label>Date</label><input type="date" id="rotaDateInput" required></div>
+          <div class="field">
+            <label>Shift</label>
+            <select id="rotaShiftInput"><option>Morning</option><option>Evening</option><option>Night</option></select>
+          </div>
+          <div class="field"><label>Engineer</label><select id="rotaEngineerInput" required></select></div>
+          <div class="form-msg" id="rotaFormMsg"></div>
+          <div style="display:flex;gap:10px;">
+            <button type="submit" class="btn btn-primary">Save Rota Entry</button>
+            <button type="button" class="btn btn-ghost" id="rotaFormCancel" style="display:none;">Cancel Edit</button>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <h3>Upcoming Rota</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Shift</th><th>Engineer</th><th></th></tr></thead>
+            <tbody id="rotaTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </section>
 
 </main>
@@ -519,6 +747,8 @@
   </div>
 </div>
 
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -548,8 +778,11 @@
       const raw = localStorage.getItem(DB_KEY);
       if(raw) return JSON.parse(raw);
     }catch(e){ console.warn("Failed to load DB", e); }
-    return { shifts: [], issues: [] };
+    return { shifts: [], issues: [], engineers: [], rota: [], leaves: [] };
   }
+  db.engineers = db.engineers || [];
+  db.rota = db.rota || [];
+  db.leaves = db.leaves || [];
   function saveDB(){
     localStorage.setItem(DB_KEY, JSON.stringify(db));
   }
@@ -570,12 +803,158 @@
     return `${s.date} · ${s.type}`;
   }
 
+  /* ================= AUTH: engineers, rota, session ================= */
+  const SESSION_KEY = "shift_ops_session_v1";
+  const LEAVE_TYPES = ["Casual","Sick","Earned","Comp-off","Other"];
+
+  function loadSession(){
+    try{
+      const raw = localStorage.getItem(SESSION_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){ console.warn("Failed to load session", e); }
+    return null;
+  }
+  function saveSession(s){ localStorage.setItem(SESSION_KEY, JSON.stringify(s)); }
+  function clearSession(){ localStorage.removeItem(SESSION_KEY); }
+  let session = loadSession();
+
+  function pad2(n){ return n.toString().padStart(2,"0"); }
+  function toDateStr(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+  function getCurrentShiftContext(now){
+    now = now || new Date();
+    const hour = now.getHours();
+    if(hour >= 6 && hour < 14) return { shiftType:"Morning", shiftDate: toDateStr(now), windowLabel:"06:00–14:00" };
+    if(hour >= 14 && hour < 22) return { shiftType:"Evening", shiftDate: toDateStr(now), windowLabel:"14:00–22:00" };
+    if(hour >= 22) return { shiftType:"Night", shiftDate: toDateStr(now), windowLabel:"22:00–06:00" };
+    const y = new Date(now); y.setDate(y.getDate()-1);
+    return { shiftType:"Night", shiftDate: toDateStr(y), windowLabel:"22:00–06:00" };
+  }
+  function findEngineer(id){ return db.engineers.find(e => e.id === id) || null; }
+  function isSupervisor(){ return !!session && session.role === "supervisor"; }
+
+  function showFormMsg(elId, text, type){
+    const el = document.getElementById(elId);
+    el.textContent = text;
+    el.className = "form-msg show " + type;
+  }
+  function clearFormMsg(elId){
+    const el = document.getElementById(elId);
+    el.textContent = "";
+    el.className = "form-msg";
+  }
+
+  function resetToDefaultTab(){
+    tabButtons.forEach(b => b.classList.toggle("active", b.dataset.tab === "dashboard"));
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.getElementById("view-dashboard").classList.add("active");
+  }
+
+  function applyRoleVisibility(){
+    document.querySelectorAll("[data-supervisor-only]").forEach(el => {
+      el.style.display = isSupervisor() ? "" : "none";
+    });
+  }
+
+  function renderSessionPill(){
+    const pill = document.getElementById("sessionPill");
+    if(!session){ pill.innerHTML = ""; return; }
+    const eng = findEngineer(session.engineerId);
+    const name = eng ? eng.name : "Unknown";
+    pill.innerHTML = `<span class="dot"></span><span>${esc(name)} · ${esc(session.role === "supervisor" ? "Supervisor" : "Engineer")}${session.shiftType ? " · " + esc(session.shiftType) + " shift" : ""}</span>`;
+  }
+
+  function renderLoginScreen(){
+    const hasEngineers = db.engineers.length > 0;
+    document.getElementById("bootstrapPane").style.display = hasEngineers ? "none" : "block";
+    document.getElementById("loginPane").style.display = hasEngineers ? "block" : "none";
+    if(hasEngineers){
+      const sel = document.getElementById("loginEngineerSelect");
+      sel.innerHTML = db.engineers.slice().sort((a,b)=>a.name.localeCompare(b.name))
+        .map(e => `<option value="${e.id}">${esc(e.name)}${e.role==="supervisor"?" (Supervisor)":""}</option>`).join("");
+      const ctx = getCurrentShiftContext();
+      document.getElementById("shiftContextBanner").innerHTML =
+        `Current shift window: ${badge(ctx.shiftType,"shift")} <span style="color:var(--text-muted);">(${ctx.windowLabel})</span>`;
+    }
+  }
+
+  function refreshAuth(){
+    if(session){
+      document.body.classList.add("logged-in");
+      resetToDefaultTab();
+      renderSessionPill();
+      applyRoleVisibility();
+      renderAll();
+    }else{
+      document.body.classList.remove("logged-in");
+      renderLoginScreen();
+    }
+  }
+
+  document.getElementById("bootstrapForm").addEventListener("submit", e => {
+    e.preventDefault();
+    clearFormMsg("bootstrapMsg");
+    const name = document.getElementById("bsName").value.trim();
+    const employeeId = document.getElementById("bsEmpId").value.trim();
+    const pin = document.getElementById("bsPin").value.trim();
+    const pinConfirm = document.getElementById("bsPinConfirm").value.trim();
+    if(!name){ showFormMsg("bootstrapMsg","Name is required","error"); return; }
+    if(!/^[0-9]{4,6}$/.test(pin)){ showFormMsg("bootstrapMsg","PIN must be 4-6 digits","error"); return; }
+    if(pin !== pinConfirm){ showFormMsg("bootstrapMsg","PINs do not match","error"); return; }
+
+    const engineer = { id: uid(), name, employeeId, role:"supervisor", pin, createdAt: nowIso() };
+    db.engineers.push(engineer);
+    saveDB();
+    const ctx = getCurrentShiftContext();
+    session = { engineerId: engineer.id, role:"supervisor", loginAt: nowIso(), shiftType: ctx.shiftType, shiftDate: ctx.shiftDate };
+    saveSession(session);
+    toast(`Welcome, ${name}! Supervisor account created.`);
+    refreshAuth();
+  });
+
+  document.getElementById("loginForm").addEventListener("submit", e => {
+    e.preventDefault();
+    clearFormMsg("loginMsg");
+    const engineerId = document.getElementById("loginEngineerSelect").value;
+    const pin = document.getElementById("loginPin").value.trim();
+    const eng = findEngineer(engineerId);
+    if(!eng){ showFormMsg("loginMsg","Select your name","error"); return; }
+    if(eng.pin !== pin){ showFormMsg("loginMsg","Incorrect PIN","error"); return; }
+
+    const ctx = getCurrentShiftContext();
+    if(eng.role !== "supervisor"){
+      const rostered = db.rota.some(r => r.engineerId === eng.id && r.date === ctx.shiftDate && r.shiftType === ctx.shiftType);
+      if(!rostered){
+        const mine = db.rota.filter(r => r.engineerId === eng.id).sort((a,b)=> new Date(b.date)-new Date(a.date)).slice(0,3);
+        const mineText = mine.length
+          ? "Your rostered shifts: " + mine.map(r => `${r.date} (${r.shiftType})`).join(", ")
+          : "You have no rota entries yet — ask your supervisor to add you to the shift rota.";
+        showFormMsg("loginMsg", `You're not rostered for the current ${ctx.shiftType} shift (${ctx.windowLabel}). ${mineText}`, "error");
+        return;
+      }
+    }
+    session = { engineerId: eng.id, role: eng.role, loginAt: nowIso(), shiftType: ctx.shiftType, shiftDate: ctx.shiftDate };
+    saveSession(session);
+    document.getElementById("loginForm").reset();
+    toast(`Welcome back, ${eng.name}`);
+    refreshAuth();
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    session = null;
+    clearSession();
+    refreshAuth();
+  });
+
   /* ---------------- Tabs ---------------- */
   const tabButtons = document.querySelectorAll("nav.tabs button");
   tabButtons.forEach(btn => {
     btn.addEventListener("click", () => switchTab(btn.dataset.tab));
   });
   function switchTab(tab){
+    const targetBtn = document.querySelector(`nav.tabs button[data-tab="${tab}"]`);
+    if(targetBtn && targetBtn.hasAttribute("data-supervisor-only") && !isSupervisor()){
+      tab = "dashboard";
+    }
     tabButtons.forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
     document.getElementById("view-" + tab).classList.add("active");
@@ -583,6 +962,9 @@
     if(tab === "issues") renderIssues();
     if(tab === "shifts") renderShifts();
     if(tab === "reports") renderReports();
+    if(tab === "leaves") renderLeaves();
+    if(tab === "engineers") renderEngineers();
+    if(tab === "rota") renderRota();
   }
 
   /* ---------------- Theme ---------------- */
@@ -819,7 +1201,7 @@
     document.getElementById("issueSeverityInput").value = issue?.severity || "Medium";
     document.getElementById("issueLocationInput").value = issue?.location || "";
     document.getElementById("issueStatusInput").value = issue?.status || "Open";
-    document.getElementById("issueReportedByInput").value = issue?.reportedBy || "";
+    document.getElementById("issueReportedByInput").value = issue?.reportedBy || (!issue ? (findEngineer(session?.engineerId)?.name || "") : "");
     document.getElementById("issueAssignedToInput").value = issue?.assignedTo || "";
     document.getElementById("issueShiftInput").value = issue?.shiftId || (getActiveShift()?.id || "");
     document.getElementById("issueResolutionInput").value = issue?.resolutionNotes || "";
@@ -1053,10 +1435,270 @@
     toast("CSV exported");
   });
 
+  /* ================= ENGINEERS ================= */
+  function populateEngineerSelects(){
+    const opts = db.engineers.slice().sort((a,b)=>a.name.localeCompare(b.name))
+      .map(e => `<option value="${e.id}">${esc(e.name)}</option>`).join("");
+
+    const rotaSel = document.getElementById("rotaEngineerInput");
+    if(rotaSel){
+      const prev = rotaSel.value;
+      rotaSel.innerHTML = db.engineers.length
+        ? `<option value="">Select engineer…</option>` + opts
+        : `<option value="">No engineers yet</option>`;
+      rotaSel.value = prev;
+    }
+    const leaveSel = document.getElementById("leaveEngineerInput");
+    if(leaveSel){
+      const prev = leaveSel.value;
+      leaveSel.innerHTML = opts || `<option value="">No engineers yet</option>`;
+      leaveSel.value = prev;
+    }
+    const fltLeaveSel = document.getElementById("fltLeaveEngineer");
+    if(fltLeaveSel){
+      const prev = fltLeaveSel.value;
+      fltLeaveSel.innerHTML = `<option value="">All engineers</option>` + opts;
+      fltLeaveSel.value = prev;
+    }
+  }
+
+  function renderEngineers(){
+    const tbody = document.getElementById("engineersTbody");
+    if(!db.engineers.length){ tbody.innerHTML = `<tr><td colspan="4">${emptyState("👷","No engineers yet")}</td></tr>`; return; }
+    const sorted = db.engineers.slice().sort((a,b)=>a.name.localeCompare(b.name));
+    tbody.innerHTML = sorted.map(e => `
+      <tr>
+        <td class="issue-title">${esc(e.name)}</td>
+        <td>${esc(e.employeeId) || "-"}</td>
+        <td><span class="tag">${e.role === "supervisor" ? "Supervisor" : "Engineer"}</span></td>
+        <td>
+          <div class="row-actions">
+            <button class="btn btn-ghost btn-sm" data-edit-eng="${e.id}">Edit</button>
+            <button class="btn btn-danger btn-sm" data-del-eng="${e.id}" ${e.id===session.engineerId?"disabled":""}>Del</button>
+          </div>
+        </td>
+      </tr>
+    `).join("");
+    tbody.querySelectorAll("[data-edit-eng]").forEach(btn => btn.addEventListener("click", () => openEngineerForm(findEngineer(btn.dataset.editEng))));
+    tbody.querySelectorAll("[data-del-eng]").forEach(btn => btn.addEventListener("click", () => {
+      if(btn.disabled) return;
+      if(confirm("Delete this engineer? Their rota entries and leave records will remain but be unassigned.")){
+        db.engineers = db.engineers.filter(x => x.id !== btn.dataset.delEng);
+        saveDB();
+        renderEngineers();
+        populateEngineerSelects();
+        toast("Engineer removed");
+      }
+    }));
+  }
+
+  function openEngineerForm(eng){
+    document.getElementById("engineerId").value = eng ? eng.id : "";
+    document.getElementById("engineerFormTitle").textContent = eng ? "Edit Engineer" : "Add Engineer";
+    document.getElementById("engNameInput").value = eng?.name || "";
+    document.getElementById("engEmpIdInput").value = eng?.employeeId || "";
+    document.getElementById("engRoleInput").value = eng?.role || "engineer";
+    document.getElementById("engPinInput").value = "";
+    document.getElementById("engPinInput").placeholder = eng ? "Leave blank to keep current PIN" : "Required, 4-6 digits";
+    document.getElementById("engineerFormCancel").style.display = eng ? "inline-flex" : "none";
+    clearFormMsg("engineerFormMsg");
+  }
+  document.getElementById("engineerFormCancel").addEventListener("click", () => openEngineerForm(null));
+
+  document.getElementById("engineerForm").addEventListener("submit", e => {
+    e.preventDefault();
+    clearFormMsg("engineerFormMsg");
+    const id = document.getElementById("engineerId").value;
+    const name = document.getElementById("engNameInput").value.trim();
+    const employeeId = document.getElementById("engEmpIdInput").value.trim();
+    const role = document.getElementById("engRoleInput").value;
+    const pin = document.getElementById("engPinInput").value.trim();
+    if(!name){ showFormMsg("engineerFormMsg","Name is required","error"); return; }
+    if(pin && !/^[0-9]{4,6}$/.test(pin)){ showFormMsg("engineerFormMsg","PIN must be 4-6 digits","error"); return; }
+
+    const existing = db.engineers.find(x => x.id === id);
+    if(existing){
+      if(!pin && !existing.pin){ showFormMsg("engineerFormMsg","PIN is required","error"); return; }
+      existing.name = name; existing.employeeId = employeeId; existing.role = role;
+      if(pin) existing.pin = pin;
+      toast("Engineer updated");
+    }else{
+      if(!pin){ showFormMsg("engineerFormMsg","PIN is required","error"); return; }
+      db.engineers.push({ id: uid(), name, employeeId, role, pin, createdAt: nowIso() });
+      toast("Engineer added");
+    }
+    saveDB();
+    openEngineerForm(null);
+    renderEngineers();
+    populateEngineerSelects();
+    renderSessionPill();
+  });
+
+  /* ================= ROTA ================= */
+  function renderRota(){
+    populateEngineerSelects();
+    const tbody = document.getElementById("rotaTbody");
+    if(!db.rota.length){ tbody.innerHTML = `<tr><td colspan="4">${emptyState("📋","No rota entries yet")}</td></tr>`; return; }
+    const sorted = db.rota.slice().sort((a,b)=> new Date(b.date) - new Date(a.date) || a.shiftType.localeCompare(b.shiftType));
+    tbody.innerHTML = sorted.map(r => {
+      const eng = findEngineer(r.engineerId);
+      return `
+      <tr>
+        <td>${esc(r.date)}</td>
+        <td>${badge(r.shiftType,"shift")}</td>
+        <td>${eng ? esc(eng.name) : "<em>Removed engineer</em>"}</td>
+        <td>
+          <div class="row-actions">
+            <button class="btn btn-ghost btn-sm" data-edit-rota="${r.id}">Edit</button>
+            <button class="btn btn-danger btn-sm" data-del-rota="${r.id}">Del</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join("");
+    tbody.querySelectorAll("[data-edit-rota]").forEach(btn => btn.addEventListener("click", () => openRotaForm(db.rota.find(x=>x.id===btn.dataset.editRota))));
+    tbody.querySelectorAll("[data-del-rota]").forEach(btn => btn.addEventListener("click", () => {
+      if(confirm("Remove this rota entry?")){
+        db.rota = db.rota.filter(x => x.id !== btn.dataset.delRota);
+        saveDB(); renderRota(); toast("Rota entry removed");
+      }
+    }));
+  }
+
+  function openRotaForm(r){
+    document.getElementById("rotaId").value = r ? r.id : "";
+    document.getElementById("rotaFormTitle").textContent = r ? "Edit Rota Entry" : "Add Rota Entry";
+    document.getElementById("rotaDateInput").value = r?.date || new Date().toISOString().slice(0,10);
+    document.getElementById("rotaShiftInput").value = r?.shiftType || "Morning";
+    document.getElementById("rotaEngineerInput").value = r?.engineerId || "";
+    document.getElementById("rotaFormCancel").style.display = r ? "inline-flex" : "none";
+    clearFormMsg("rotaFormMsg");
+  }
+  document.getElementById("rotaFormCancel").addEventListener("click", () => openRotaForm(null));
+
+  document.getElementById("rotaForm").addEventListener("submit", e => {
+    e.preventDefault();
+    clearFormMsg("rotaFormMsg");
+    const id = document.getElementById("rotaId").value;
+    const date = document.getElementById("rotaDateInput").value;
+    const shiftType = document.getElementById("rotaShiftInput").value;
+    const engineerId = document.getElementById("rotaEngineerInput").value;
+    if(!date || !engineerId){ showFormMsg("rotaFormMsg","Date and engineer are required","error"); return; }
+    const dup = db.rota.find(x => x.id !== id && x.date === date && x.shiftType === shiftType && x.engineerId === engineerId);
+    if(dup){ showFormMsg("rotaFormMsg","This engineer is already rostered for that date/shift","error"); return; }
+
+    const existing = db.rota.find(x => x.id === id);
+    if(existing){
+      Object.assign(existing, {date, shiftType, engineerId});
+      toast("Rota entry updated");
+    }else{
+      db.rota.push({ id: uid(), date, shiftType, engineerId, createdAt: nowIso() });
+      toast("Rota entry added");
+    }
+    saveDB();
+    openRotaForm(null);
+    renderRota();
+  });
+
+  /* ================= LEAVES ================= */
+  function renderLeaves(){
+    populateEngineerSelects();
+    const supervisor = isSupervisor();
+    document.getElementById("leaveEngineerField").style.display = supervisor ? "flex" : "none";
+    document.getElementById("leaveFilterWrap").style.display = supervisor ? "flex" : "none";
+    document.getElementById("leavesSub").textContent = supervisor
+      ? "All engineers' leave history — persists across shift/rota changes"
+      : "Your leave history — kept with you across shift changes, visible only to you";
+
+    const fltId = supervisor ? document.getElementById("fltLeaveEngineer").value : session.engineerId;
+    const list = db.leaves
+      .filter(l => supervisor ? (!fltId || l.engineerId === fltId) : l.engineerId === session.engineerId)
+      .sort((a,b) => new Date(b.fromDate) - new Date(a.fromDate));
+
+    const tbody = document.getElementById("leavesTbody");
+    if(!list.length){ tbody.innerHTML = `<tr><td colspan="7">${emptyState("🗓️","No leave records")}</td></tr>`; return; }
+    tbody.innerHTML = list.map(l => {
+      const eng = findEngineer(l.engineerId);
+      const canManage = supervisor || l.engineerId === session.engineerId;
+      return `
+      <tr>
+        <td>${eng ? esc(eng.name) : "<em>Removed engineer</em>"}</td>
+        <td>${esc(l.fromDate)}</td>
+        <td>${esc(l.toDate)}</td>
+        <td>${esc(l.type)}</td>
+        <td>
+          ${supervisor
+            ? `<select class="status-select" data-leave-status="${l.id}">
+                ${["Recorded","Approved","Rejected"].map(s=>`<option ${s===l.status?"selected":""}>${s}</option>`).join("")}
+               </select>`
+            : badge(l.status,"lv")}
+        </td>
+        <td>${esc(l.reason) || "-"}</td>
+        <td>
+          ${canManage ? `<div class="row-actions">
+            <button class="btn btn-ghost btn-sm" data-edit-leave="${l.id}">Edit</button>
+            <button class="btn btn-danger btn-sm" data-del-leave="${l.id}">Del</button>
+          </div>` : ""}
+        </td>
+      </tr>`;
+    }).join("");
+
+    tbody.querySelectorAll("[data-leave-status]").forEach(sel => sel.addEventListener("change", () => {
+      const lv = db.leaves.find(x => x.id === sel.dataset.leaveStatus);
+      lv.status = sel.value;
+      saveDB(); renderLeaves(); toast("Leave status updated");
+    }));
+    tbody.querySelectorAll("[data-edit-leave]").forEach(btn => btn.addEventListener("click", () => openLeaveForm(db.leaves.find(x=>x.id===btn.dataset.editLeave))));
+    tbody.querySelectorAll("[data-del-leave]").forEach(btn => btn.addEventListener("click", () => {
+      if(confirm("Delete this leave record?")){
+        db.leaves = db.leaves.filter(x => x.id !== btn.dataset.delLeave);
+        saveDB(); renderLeaves(); toast("Leave record deleted");
+      }
+    }));
+  }
+
+  function openLeaveForm(l){
+    document.getElementById("leaveId").value = l ? l.id : "";
+    document.getElementById("leaveFormTitle").textContent = l ? "Edit Leave" : "Record Leave";
+    if(isSupervisor()) document.getElementById("leaveEngineerInput").value = l?.engineerId || session.engineerId;
+    document.getElementById("leaveFromInput").value = l?.fromDate || new Date().toISOString().slice(0,10);
+    document.getElementById("leaveToInput").value = l?.toDate || new Date().toISOString().slice(0,10);
+    document.getElementById("leaveTypeInput").value = l?.type || "Casual";
+    document.getElementById("leaveReasonInput").value = l?.reason || "";
+    document.getElementById("leaveFormCancel").style.display = l ? "inline-flex" : "none";
+    clearFormMsg("leaveFormMsg");
+  }
+  document.getElementById("leaveFormCancel").addEventListener("click", () => openLeaveForm(null));
+  document.getElementById("fltLeaveEngineer").addEventListener("change", renderLeaves);
+
+  document.getElementById("leaveForm").addEventListener("submit", e => {
+    e.preventDefault();
+    clearFormMsg("leaveFormMsg");
+    const id = document.getElementById("leaveId").value;
+    const engineerId = isSupervisor() ? document.getElementById("leaveEngineerInput").value : session.engineerId;
+    const fromDate = document.getElementById("leaveFromInput").value;
+    const toDate = document.getElementById("leaveToInput").value;
+    const type = document.getElementById("leaveTypeInput").value;
+    const reason = document.getElementById("leaveReasonInput").value.trim();
+    if(!engineerId || !fromDate || !toDate){ showFormMsg("leaveFormMsg","All fields are required","error"); return; }
+    if(new Date(toDate) < new Date(fromDate)){ showFormMsg("leaveFormMsg","'To' date can't be before 'From' date","error"); return; }
+
+    const existing = db.leaves.find(x => x.id === id);
+    if(existing){
+      Object.assign(existing, {engineerId, fromDate, toDate, type, reason});
+      toast("Leave record updated");
+    }else{
+      db.leaves.push({ id: uid(), engineerId, fromDate, toDate, type, reason, status:"Recorded", createdAt: nowIso() });
+      toast("Leave recorded");
+    }
+    saveDB();
+    openLeaveForm(null);
+    renderLeaves();
+  });
+
   /* ================= Demo data / reset ================= */
   document.getElementById("demoBtn").addEventListener("click", () => {
-    if(db.shifts.length || db.issues.length){
-      if(!confirm("This will add sample shifts and issues to your existing data. Continue?")) return;
+    if(db.shifts.length || db.issues.length || db.engineers.length > 1){
+      if(!confirm("This will add sample shifts, issues and demo engineers to your existing data. Continue?")) return;
     }
     const today = new Date().toISOString().slice(0,10);
     const s1 = { id: uid(), date: today, type:"Morning", supervisor:"Alex Rivera", team:["Sam","Priya","Jordan"], notes:"Line 3 running slow after maintenance.", active:true, createdAt: nowIso() };
@@ -1078,29 +1720,60 @@
         comments: [{text:"Issue reported", at: nowIso()}],
       });
     });
+
+    const demoNames = ["Priya Nair","Sam Fischer","Jordan Blake"];
+    const demoEngineers = demoNames.filter(n => !db.engineers.some(e=>e.name===n)).map(n => ({
+      id: uid(), name:n, employeeId:"EMP-"+Math.floor(1000+Math.random()*9000), role:"engineer", pin:"1234", createdAt: nowIso()
+    }));
+    db.engineers.push(...demoEngineers);
+    if(demoEngineers.length){
+      const ctx = getCurrentShiftContext();
+      const rotaCandidates = [
+        { date: ctx.shiftDate, shiftType: ctx.shiftType, engineerId: demoEngineers[0].id },
+        { date: today, shiftType:"Morning", engineerId: demoEngineers[0].id },
+        { date: today, shiftType:"Evening", engineerId: demoEngineers[1] ? demoEngineers[1].id : demoEngineers[0].id },
+        { date: today, shiftType:"Night", engineerId: demoEngineers[2] ? demoEngineers[2].id : demoEngineers[0].id },
+      ];
+      const seen = new Set();
+      rotaCandidates.forEach(c => {
+        const key = c.date + "|" + c.shiftType;
+        if(seen.has(key)) return;
+        seen.add(key);
+        db.rota.push({ id: uid(), ...c, createdAt: nowIso() });
+      });
+    }
+
     saveDB();
     renderAll();
-    toast("Sample data loaded");
+    toast(demoEngineers.length ? "Sample data loaded — demo engineer PIN is 1234" : "Sample data loaded");
   });
 
   document.getElementById("resetBtn").addEventListener("click", () => {
-    if(confirm("This will permanently delete all shifts and issues. Continue?")){
-      db = { shifts: [], issues: [] };
+    if(confirm("This will permanently delete all shifts, issues, engineers, rota and leave records, and log you out. Continue?")){
+      db = { shifts: [], issues: [], engineers: [], rota: [], leaves: [] };
       saveDB();
-      renderAll();
+      session = null;
+      clearSession();
       toast("All data cleared");
+      refreshAuth();
     }
   });
 
   function renderAll(){
     renderActivePill();
+    renderSessionPill();
     renderDashboard();
     renderIssues();
     renderShifts();
     renderReports();
+    renderLeaves();
+    if(isSupervisor()){
+      renderEngineers();
+      renderRota();
+    }
   }
 
-  renderAll();
+  refreshAuth();
 })();
 </script>
 </body>
