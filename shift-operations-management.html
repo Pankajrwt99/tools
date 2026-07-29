@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shift Operations Management - Defect & Problem Tracker</title>
+<meta name="description" content="Track defects, problems and shift handovers. Log issues by severity and status, manage shifts, and generate handover reports — all in your browser.">
+<style>
+  :root{
+    --bg:#f4f6f9;
+    --surface:#ffffff;
+    --surface-2:#f9fafb;
+    --border:#e2e6ec;
+    --text:#1a2233;
+    --text-muted:#6b7688;
+    --primary:#3454d1;
+    --primary-dark:#2740a8;
+    --accent:#7209b7;
+    --radius:10px;
+    --shadow:0 4px 16px rgba(20,25,40,.06);
+    --shadow-lg:0 12px 32px rgba(20,25,40,.12);
+
+    --critical:#e5484d;
+    --high:#f0883e;
+    --medium:#e6b333;
+    --low:#3d8bfd;
+
+    --open:#e5484d;
+    --progress:#f0883e;
+    --resolved:#2ea043;
+    --closed:#8b93a3;
+  }
+  [data-theme="dark"]{
+    --bg:#12151d;
+    --surface:#1a1f2b;
+    --surface-2:#20263380;
+    --border:#2b3242;
+    --text:#e7eaf1;
+    --text-muted:#8b93a7;
+    --shadow:0 4px 16px rgba(0,0,0,.35);
+    --shadow-lg:0 12px 32px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',Roboto,Tahoma,Geneva,Verdana,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    transition:background .2s,color .2s;
+  }
+  a{color:inherit;}
+  button{font-family:inherit;cursor:pointer;}
+
+  /* Header */
+  header.appbar{
+    background:linear-gradient(120deg,var(--primary),var(--accent));
+    color:#fff;
+    padding:16px 24px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+    box-shadow:var(--shadow);
+  }
+  header.appbar .brand{display:flex;align-items:center;gap:12px;}
+  header.appbar .brand .logo{
+    width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.18);
+    display:flex;align-items:center;justify-content:center;font-size:20px;
+  }
+  header.appbar h1{font-size:1.25rem;font-weight:700;}
+  header.appbar p{font-size:.75rem;opacity:.85;}
+  .header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .icon-btn{
+    background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;
+    border-radius:8px;padding:8px 12px;font-size:.85rem;display:flex;align-items:center;gap:6px;
+  }
+  .icon-btn:hover{background:rgba(255,255,255,.28);}
+  .active-shift-pill{
+    background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
+    padding:6px 12px;border-radius:20px;font-size:.78rem;display:flex;gap:6px;align-items:center;
+  }
+  .active-shift-pill .dot{width:8px;height:8px;border-radius:50%;background:#4ade80;box-shadow:0 0 0 3px rgba(74,222,128,.3);}
+
+  /* Nav tabs */
+  nav.tabs{
+    display:flex;gap:4px;padding:0 24px;background:var(--surface);
+    border-bottom:1px solid var(--border);overflow-x:auto;
+    position:sticky;top:0;z-index:20;
+  }
+  nav.tabs button{
+    background:none;border:none;padding:14px 16px;font-size:.88rem;font-weight:600;
+    color:var(--text-muted);border-bottom:3px solid transparent;white-space:nowrap;
+  }
+  nav.tabs button.active{color:var(--primary);border-bottom-color:var(--primary);}
+  nav.tabs button:hover{color:var(--primary);}
+
+  main{max-width:1280px;margin:0 auto;padding:22px 24px 60px;}
+  .view{display:none;}
+  .view.active{display:block;animation:fadeIn .25s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+  .row{display:flex;gap:16px;flex-wrap:wrap;}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:18px;}
+  .toolbar h2{font-size:1.3rem;}
+  .toolbar .sub{color:var(--text-muted);font-size:.85rem;margin-top:2px;}
+
+  .btn{
+    border:none;border-radius:8px;padding:10px 16px;font-size:.85rem;font-weight:600;
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-primary:hover{background:var(--primary-dark);}
+  .btn-ghost{background:var(--surface-2);color:var(--text);border:1px solid var(--border);}
+  .btn-ghost:hover{background:var(--border);}
+  .btn-danger{background:#fdeceb;color:var(--critical);}
+  .btn-danger:hover{background:#f9d3d1;}
+  [data-theme="dark"] .btn-danger{background:#3a1f22;}
+  .btn-sm{padding:6px 10px;font-size:.78rem;border-radius:6px;}
+
+  /* KPI cards */
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px;}
+  .kpi{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+  }
+  .kpi .label{color:var(--text-muted);font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.03em;}
+  .kpi .value{font-size:1.9rem;font-weight:800;margin-top:6px;}
+  .kpi .bar{height:4px;border-radius:2px;margin-top:12px;background:var(--border);overflow:hidden;}
+  .kpi .bar span{display:block;height:100%;}
+
+  .card{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:18px;
+  }
+  .card h3{font-size:1rem;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;}
+
+  .grid-2{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;}
+  @media(max-width:900px){.grid-2{grid-template-columns:1fr;}}
+
+  /* Bars for breakdown */
+  .breakdown-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:.82rem;}
+  .breakdown-row .label{width:90px;flex-shrink:0;color:var(--text-muted);}
+  .breakdown-row .track{flex:1;height:10px;border-radius:5px;background:var(--surface-2);overflow:hidden;}
+  .breakdown-row .track span{display:block;height:100%;border-radius:5px;}
+  .breakdown-row .count{width:24px;text-align:right;font-weight:700;}
+
+  /* Badges */
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:.72rem;font-weight:700;}
+  .badge::before{content:"";width:7px;height:7px;border-radius:50%;}
+  .badge.sev-Critical{background:#fdeceb;color:var(--critical);} .badge.sev-Critical::before{background:var(--critical);}
+  .badge.sev-High{background:#fdf0e6;color:var(--high);} .badge.sev-High::before{background:var(--high);}
+  .badge.sev-Medium{background:#fdf6e3;color:#a8790b;} .badge.sev-Medium::before{background:var(--medium);}
+  .badge.sev-Low{background:#e9f2ff;color:var(--low);} .badge.sev-Low::before{background:var(--low);}
+
+  .badge.st-Open{background:#fdeceb;color:var(--critical);} .badge.st-Open::before{background:var(--open);}
+  .badge.st-InProgress{background:#fdf0e6;color:var(--high);} .badge.st-InProgress::before{background:var(--progress);}
+  .badge.st-Resolved{background:#e6f7ec;color:var(--resolved);} .badge.st-Resolved::before{background:var(--resolved);}
+  .badge.st-Closed{background:#eef0f3;color:var(--closed);} .badge.st-Closed::before{background:var(--closed);}
+  [data-theme="dark"] .badge.sev-Critical,[data-theme="dark"] .badge.st-Open{background:#3a1f22;}
+  [data-theme="dark"] .badge.sev-High,[data-theme="dark"] .badge.st-InProgress{background:#3a2c1c;}
+  [data-theme="dark"] .badge.sev-Medium{background:#3a341c;color:#e6c34d;}
+  [data-theme="dark"] .badge.sev-Low{background:#1c2c3a;}
+  [data-theme="dark"] .badge.st-Resolved{background:#193a26;}
+  [data-theme="dark"] .badge.st-Closed{background:#262c38;}
+
+  /* Filters */
+  .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+  .filters input, .filters select{
+    background:var(--surface);border:1px solid var(--border);border-radius:8px;
+    padding:9px 12px;font-size:.85rem;color:var(--text);
+  }
+  .filters input[type="text"]{min-width:220px;flex:1;}
+
+  /* Table */
+  .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);}
+  table{width:100%;border-collapse:collapse;font-size:.85rem;min-width:820px;}
+  thead th{
+    text-align:left;padding:12px 14px;background:var(--surface-2);color:var(--text-muted);
+    font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);
+  }
+  tbody td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:top;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:var(--surface-2);}
+  .issue-title{font-weight:600;}
+  .issue-desc{color:var(--text-muted);font-size:.78rem;margin-top:2px;max-width:280px;}
+  .row-actions{display:flex;gap:6px;}
+  .empty-state{padding:50px 20px;text-align:center;color:var(--text-muted);}
+  .empty-state .big{font-size:2.4rem;margin-bottom:8px;}
+
+  select.status-select{
+    border-radius:20px;border:1px solid var(--border);padding:5px 10px;font-size:.75rem;font-weight:700;
+    background:var(--surface);color:var(--text);
+  }
+
+  /* Shift cards */
+  .shift-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:16px;box-shadow:var(--shadow);position:relative;
+  }
+  .shift-card.active{border-color:var(--primary);box-shadow:0 0 0 2px rgba(52,84,209,.25);}
+  .shift-card .top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+  .shift-card h4{font-size:1rem;}
+  .shift-card .meta{font-size:.78rem;color:var(--text-muted);margin-top:2px;}
+  .shift-card .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+  .tag{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:3px 9px;font-size:.72rem;}
+  .shift-card .stats{display:flex;gap:14px;margin-top:12px;font-size:.78rem;}
+  .shift-card .stats b{font-size:.95rem;display:block;}
+  .shift-card .actions{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap;}
+
+  /* Modal */
+  .overlay{
+    position:fixed;inset:0;background:rgba(10,14,25,.55);display:none;
+    align-items:flex-start;justify-content:center;z-index:100;padding:40px 16px;overflow-y:auto;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:var(--surface);border-radius:14px;max-width:560px;width:100%;
+    box-shadow:var(--shadow-lg);animation:pop .18s ease;
+  }
+  @keyframes pop{from{transform:scale(.96);opacity:0;}to{transform:scale(1);opacity:1;}}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid var(--border);}
+  .modal-head h3{font-size:1.05rem;}
+  .modal-head button{background:none;border:none;font-size:1.2rem;color:var(--text-muted);}
+  .modal-body{padding:20px;display:flex;flex-direction:column;gap:14px;max-height:70vh;overflow-y:auto;}
+  .modal-foot{padding:16px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field label{font-size:.8rem;font-weight:600;color:var(--text-muted);}
+  .field input, .field select, .field textarea{
+    border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:.88rem;
+    background:var(--surface);color:var(--text);width:100%;font-family:inherit;
+  }
+  .field textarea{resize:vertical;min-height:70px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:520px){.field-row{grid-template-columns:1fr;}}
+
+  /* Comments */
+  .comment-list{display:flex;flex-direction:column;gap:10px;margin-top:6px;}
+  .comment{background:var(--surface-2);border-radius:8px;padding:10px 12px;font-size:.82rem;}
+  .comment .meta{color:var(--text-muted);font-size:.72rem;margin-top:4px;}
+
+  /* Toast */
+  #toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:#1a2233;color:#fff;padding:12px 20px;border-radius:8px;font-size:.85rem;
+    box-shadow:var(--shadow-lg);z-index:200;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+
+  .footer-note{text-align:center;color:var(--text-muted);font-size:.78rem;margin-top:30px;}
+  @media print{
+    header.appbar, nav.tabs, .toolbar .btn, .filters, .no-print{display:none !important;}
+    body{background:#fff;color:#000;}
+    main{padding:0;}
+  }
+
+  /* Auth / login */
+  body:not(.logged-in) .app-shell{display:none;}
+  body.logged-in #loginScreen{display:none;}
+  #loginScreen{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(160deg,var(--bg),var(--surface-2));padding:24px;
+  }
+  .login-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    box-shadow:var(--shadow-lg);padding:32px;max-width:420px;width:100%;
+  }
+  .login-brand{text-align:center;margin-bottom:22px;}
+  .login-brand .logo{
+    width:52px;height:52px;border-radius:14px;background:linear-gradient(120deg,var(--primary),var(--accent));
+    display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 12px;color:#fff;
+  }
+  .login-brand h1{font-size:1.15rem;}
+  .login-brand p{font-size:.82rem;color:var(--text-muted);margin-top:4px;}
+  #bootstrapPane h2, #loginPane h2{font-size:1rem;margin-bottom:6px;}
+  #bootstrapPane .sub{font-size:.8rem;color:var(--text-muted);margin-bottom:16px;}
+  #bootstrapForm, #loginForm{display:flex;flex-direction:column;gap:14px;}
+  .shift-context-banner{
+    background:var(--surface-2);border:1px solid var(--border);border-radius:8px;
+    padding:10px 12px;font-size:.8rem;margin-bottom:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  }
+  .form-msg{font-size:.8rem;padding:9px 11px;border-radius:6px;display:none;line-height:1.4;}
+  .form-msg.show{display:block;}
+  .form-msg.error{background:#fdeceb;color:var(--critical);}
+  .form-msg.success{background:#e6f7ec;color:var(--resolved);}
+  [data-theme="dark"] .form-msg.error{background:#3a1f22;}
+  [data-theme="dark"] .form-msg.success{background:#193a26;}
+
+  /* Shift-type & leave-status badges */
+  .badge.shift-Morning{background:#fff4e0;color:#a8650b;} .badge.shift-Morning::before{background:#f2a93b;}
+  .badge.shift-Evening{background:#e8f0ff;color:#2554c7;} .badge.shift-Evening::before{background:#4d7cf0;}
+  .badge.shift-Night{background:#ece7fb;color:#5b3fae;} .badge.shift-Night::before{background:#8f6fe0;}
+  [data-theme="dark"] .badge.shift-Morning{background:#3a2c1c;}
+  [data-theme="dark"] .badge.shift-Evening{background:#1c2a3a;}
+  [data-theme="dark"] .badge.shift-Night{background:#2a2038;}
+  .badge.lv-Recorded{background:#eef0f3;color:var(--closed);} .badge.lv-Recorded::before{background:var(--closed);}
+  .badge.lv-Approved{background:#e6f7ec;color:var(--resolved);} .badge.lv-Approved::before{background:var(--resolved);}
+  .badge.lv-Rejected{background:#fdeceb;color:var(--critical);} .badge.lv-Rejected::before{background:var(--critical);}
+  [data-theme="dark"] .badge.lv-Approved{background:#193a26;}
+  [data-theme="dark"] .badge.lv-Rejected{background:#3a1f22;}
+</style>
+</head>
+<body>
+
+<section id="loginScreen">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="logo">🛠️</div>
+      <h1>Shift Operations Manager</h1>
+      <p>Sign in with your shift roster credentials</p>
+    </div>
+
+    <div id="bootstrapPane">
+      <h2>Set up the first Supervisor account</h2>
+      <p class="sub">No engineers are registered yet. Create a supervisor account to manage the shift rota, engineers and leave records.</p>
+      <form id="bootstrapForm">
+        <div class="field"><label>Full Name</label><input type="text" id="bsName" required placeholder="e.g. Alex Rivera"></div>
+        <div class="field"><label>Employee ID</label><input type="text" id="bsEmpId" placeholder="e.g. EMP-001"></div>
+        <div class="field-row">
+          <div class="field"><label>Set PIN (4-6 digits)</label><input type="password" id="bsPin" inputmode="numeric" pattern="[0-9]{4,6}" autocomplete="off" required placeholder="••••"></div>
+          <div class="field"><label>Confirm PIN</label><input type="password" id="bsPinConfirm" inputmode="numeric" pattern="[0-9]{4,6}" autocomplete="off" required placeholder="••••"></div>
+        </div>
+        <div class="form-msg" id="bootstrapMsg"></div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Create Supervisor Account</button>
+      </form>
+    </div>
+
+    <div id="loginPane" style="display:none;">
+      <h2>Log in</h2>
+      <div class="shift-context-banner" id="shiftContextBanner"></div>
+      <form id="loginForm">
+        <div class="field">
+          <label>Engineer</label>
+          <select id="loginEngineerSelect" required></select>
+        </div>
+        <div class="field">
+          <label>PIN</label>
+          <input type="password" id="loginPin" inputmode="numeric" pattern="[0-9]{4,6}" autocomplete="off" required placeholder="••••">
+        </div>
+        <div class="form-msg" id="loginMsg"></div>
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Log In</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<div class="app-shell">
+<header class="appbar">
+  <div class="brand">
+    <div class="logo">🛠️</div>
+    <div>
+      <h1>Shift Operations Manager</h1>
+      <p>Defect &amp; problem tracking across shifts</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="active-shift-pill" id="sessionPill"></div>
+    <div class="active-shift-pill" id="activeShiftPill"><span class="dot"></span><span>No active shift</span></div>
+    <button class="icon-btn" id="themeToggle" title="Toggle theme">🌓 Theme</button>
+    <button class="icon-btn" id="demoBtn" data-supervisor-only="1" title="Load sample data">✨ Load Demo Data</button>
+    <button class="icon-btn" id="resetBtn" data-supervisor-only="1" title="Clear all data">🗑️ Reset</button>
+    <button class="icon-btn" id="logoutBtn" title="Log out">🚪 Logout</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button data-tab="dashboard" class="active">📊 Dashboard</button>
+  <button data-tab="issues">🐞 Defects &amp; Problems</button>
+  <button data-tab="shifts">🕒 Shifts</button>
+  <button data-tab="leaves">🗓️ Leaves</button>
+  <button data-tab="reports">📄 Reports</button>
+  <button data-tab="engineers" data-supervisor-only="1">👷 Engineers</button>
+  <button data-tab="rota" data-supervisor-only="1">📋 Rota</button>
+</nav>
+
+<main>
+
+  <!-- DASHBOARD -->
+  <section class="view active" id="view-dashboard">
+    <div class="toolbar">
+      <div>
+        <h2>Dashboard</h2>
+        <div class="sub">Live overview of open problems and shift status</div>
+      </div>
+      <button class="btn btn-primary" id="dashAddIssue">+ Report Issue</button>
+    </div>
+
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Open Issues by Severity</h3>
+        <div id="sevBreakdown"></div>
+      </div>
+      <div class="card">
+        <h3>Open Issues by Category</h3>
+        <div id="catBreakdown"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h3>Recent Activity <span class="sub" style="font-weight:400;font-size:.78rem;color:var(--text-muted);">latest 8</span></h3>
+      <div class="table-wrap" id="recentTableWrap"></div>
+    </div>
+  </section>
+
+  <!-- ISSUES -->
+  <section class="view" id="view-issues">
+    <div class="toolbar">
+      <div>
+        <h2>Defects &amp; Problems</h2>
+        <div class="sub">Log, triage and resolve issues found during shifts</div>
+      </div>
+      <button class="btn btn-primary" id="issuesAddBtn">+ Report Issue</button>
+    </div>
+
+    <div class="filters">
+      <input type="text" id="fltSearch" placeholder="Search title, description, location...">
+      <select id="fltStatus">
+        <option value="">All statuses</option>
+        <option>Open</option><option>In Progress</option><option>Resolved</option><option>Closed</option>
+      </select>
+      <select id="fltSeverity">
+        <option value="">All severities</option>
+        <option>Critical</option><option>High</option><option>Medium</option><option>Low</option>
+      </select>
+      <select id="fltCategory">
+        <option value="">All categories</option>
+      </select>
+      <select id="fltShift">
+        <option value="">All shifts</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" id="fltClear">Clear</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Issue</th><th>Category</th><th>Severity</th><th>Location</th>
+            <th>Shift</th><th>Assigned To</th><th>Status</th><th>Reported</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="issuesTbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SHIFTS -->
+  <section class="view" id="view-shifts">
+    <div class="toolbar">
+      <div>
+        <h2>Shifts</h2>
+        <div class="sub">Manage shift handovers and rosters</div>
+      </div>
+      <button class="btn btn-primary" id="shiftsAddBtn">+ New Shift</button>
+    </div>
+    <div class="row" id="shiftsGrid" style="align-items:stretch;"></div>
+  </section>
+
+  <!-- REPORTS -->
+  <section class="view" id="view-reports">
+    <div class="toolbar">
+      <div>
+        <h2>Reports</h2>
+        <div class="sub">Export data or print a shift handover report</div>
+      </div>
+    </div>
+    <div class="grid-2 no-print">
+      <div class="card">
+        <h3>Export Data</h3>
+        <p class="sub" style="margin-bottom:14px;">Download all logged issues as a CSV file for further analysis.</p>
+        <button class="btn btn-ghost" id="exportCsvBtn">⬇️ Export Issues (CSV)</button>
+      </div>
+      <div class="card">
+        <h3>Shift Handover Report</h3>
+        <p class="sub" style="margin-bottom:14px;">Select a shift to generate a printable handover summary.</p>
+        <div class="field">
+          <select id="reportShiftSelect"></select>
+        </div>
+        <button class="btn btn-primary" id="printReportBtn" style="margin-top:12px;">🖨️ Print Handover Report</button>
+      </div>
+    </div>
+
+    <div class="card" id="handoverPreview" style="margin-top:16px;"></div>
+  </section>
+
+  <!-- LEAVES -->
+  <section class="view" id="view-leaves">
+    <div class="toolbar">
+      <div>
+        <h2>Leave Records</h2>
+        <div class="sub" id="leavesSub">Your leave history — kept with you across shift changes</div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3 id="leaveFormTitle">Record Leave</h3>
+        <form id="leaveForm" style="display:flex;flex-direction:column;gap:12px;">
+          <input type="hidden" id="leaveId">
+          <div class="field" id="leaveEngineerField" style="display:none;">
+            <label>Engineer</label>
+            <select id="leaveEngineerInput"></select>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>From</label><input type="date" id="leaveFromInput" required></div>
+            <div class="field"><label>To</label><input type="date" id="leaveToInput" required></div>
+          </div>
+          <div class="field">
+            <label>Type</label>
+            <select id="leaveTypeInput">
+              <option>Casual</option><option>Sick</option><option>Earned</option><option>Comp-off</option><option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Reason</label>
+            <textarea id="leaveReasonInput" placeholder="Optional"></textarea>
+          </div>
+          <div class="form-msg" id="leaveFormMsg"></div>
+          <div style="display:flex;gap:10px;">
+            <button type="submit" class="btn btn-primary">Save Leave</button>
+            <button type="button" class="btn btn-ghost" id="leaveFormCancel" style="display:none;">Cancel Edit</button>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <h3>Records</h3>
+        <div class="filters no-print" id="leaveFilterWrap" style="display:none;">
+          <select id="fltLeaveEngineer"><option value="">All engineers</option></select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Engineer</th><th>From</th><th>To</th><th>Type</th><th>Status</th><th>Reason</th><th></th></tr></thead>
+            <tbody id="leavesTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ENGINEERS -->
+  <section class="view" id="view-engineers">
+    <div class="toolbar">
+      <div>
+        <h2>Engineers</h2>
+        <div class="sub">Manage engineer accounts and login PINs</div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3 id="engineerFormTitle">Add Engineer</h3>
+        <form id="engineerForm" style="display:flex;flex-direction:column;gap:12px;">
+          <input type="hidden" id="engineerId">
+          <div class="field"><label>Full Name</label><input type="text" id="engNameInput" required></div>
+          <div class="field"><label>Employee ID</label><input type="text" id="engEmpIdInput"></div>
+          <div class="field-row">
+            <div class="field">
+              <label>Role</label>
+              <select id="engRoleInput"><option value="engineer">Engineer</option><option value="supervisor">Supervisor</option></select>
+            </div>
+            <div class="field">
+              <label>PIN (4-6 digits)</label>
+              <input type="password" id="engPinInput" inputmode="numeric" pattern="[0-9]{4,6}" autocomplete="off" placeholder="Required, 4-6 digits">
+            </div>
+          </div>
+          <div class="form-msg" id="engineerFormMsg"></div>
+          <div style="display:flex;gap:10px;">
+            <button type="submit" class="btn btn-primary">Save Engineer</button>
+            <button type="button" class="btn btn-ghost" id="engineerFormCancel" style="display:none;">Cancel Edit</button>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <h3>All Engineers</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Employee ID</th><th>Role</th><th></th></tr></thead>
+            <tbody id="engineersTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROTA -->
+  <section class="view" id="view-rota">
+    <div class="toolbar">
+      <div>
+        <h2>Shift Rota</h2>
+        <div class="sub">Assign engineers to shifts — only rostered engineers can log in during that shift</div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3 id="rotaFormTitle">Add Rota Entry</h3>
+        <form id="rotaForm" style="display:flex;flex-direction:column;gap:12px;">
+          <input type="hidden" id="rotaId">
+          <div class="field"><label>Date</label><input type="date" id="rotaDateInput" required></div>
+          <div class="field">
+            <label>Shift</label>
+            <select id="rotaShiftInput"><option>Morning</option><option>Evening</option><option>Night</option></select>
+          </div>
+          <div class="field"><label>Engineer</label><select id="rotaEngineerInput" required></select></div>
+          <div class="form-msg" id="rotaFormMsg"></div>
+          <div style="display:flex;gap:10px;">
+            <button type="submit" class="btn btn-primary">Save Rota Entry</button>
+            <button type="button" class="btn btn-ghost" id="rotaFormCancel" style="display:none;">Cancel Edit</button>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <h3>Upcoming Rota</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Shift</th><th>Engineer</th><th></th></tr></thead>
+            <tbody id="rotaTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="footer-note">Data is stored locally in this browser (localStorage). Nothing is sent to a server.</div>
+
+<!-- ISSUE MODAL -->
+<div class="overlay" id="issueOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="issueModalTitle">Report Issue</h3>
+      <button id="issueModalClose">✕</button>
+    </div>
+    <form id="issueForm">
+      <div class="modal-body">
+        <input type="hidden" id="issueId">
+        <div class="field">
+          <label>Title *</label>
+          <input type="text" id="issueTitleInput" required placeholder="e.g. Conveyor belt motor overheating">
+        </div>
+        <div class="field">
+          <label>Description</label>
+          <textarea id="issueDescInput" placeholder="Details of the defect / problem..."></textarea>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Category</label>
+            <select id="issueCategoryInput">
+              <option>Mechanical</option><option>Electrical</option><option>Software/IT</option>
+              <option>Safety</option><option>Quality</option><option>Process</option>
+              <option>Material</option><option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Severity</label>
+            <select id="issueSeverityInput">
+              <option>Critical</option><option>High</option><option selected>Medium</option><option>Low</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Location / Machine / Line</label>
+            <input type="text" id="issueLocationInput" placeholder="e.g. Line 3, Station 2">
+          </div>
+          <div class="field">
+            <label>Status</label>
+            <select id="issueStatusInput">
+              <option>Open</option><option>In Progress</option><option>Resolved</option><option>Closed</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Reported By</label>
+            <input type="text" id="issueReportedByInput" placeholder="Name">
+          </div>
+          <div class="field">
+            <label>Assigned To</label>
+            <input type="text" id="issueAssignedToInput" placeholder="Name">
+          </div>
+        </div>
+        <div class="field">
+          <label>Shift</label>
+          <select id="issueShiftInput"></select>
+        </div>
+        <div class="field">
+          <label>Resolution Notes</label>
+          <textarea id="issueResolutionInput" placeholder="How was / will this be resolved..."></textarea>
+        </div>
+        <div class="field" id="commentsSection" style="display:none;">
+          <label>Activity Log</label>
+          <div class="comment-list" id="commentList"></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" id="issueModalCancel">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Issue</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- SHIFT MODAL -->
+<div class="overlay" id="shiftOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="shiftModalTitle">New Shift</h3>
+      <button id="shiftModalClose">✕</button>
+    </div>
+    <form id="shiftForm">
+      <div class="modal-body">
+        <input type="hidden" id="shiftId">
+        <div class="field-row">
+          <div class="field">
+            <label>Date</label>
+            <input type="date" id="shiftDateInput" required>
+          </div>
+          <div class="field">
+            <label>Shift Type</label>
+            <select id="shiftTypeInput">
+              <option>Morning</option><option>Evening</option><option>Night</option><option>General/Day</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Supervisor</label>
+          <input type="text" id="shiftSupervisorInput" placeholder="Supervisor name">
+        </div>
+        <div class="field">
+          <label>Team Members (comma separated)</label>
+          <input type="text" id="shiftTeamInput" placeholder="e.g. John, Priya, Alex">
+        </div>
+        <div class="field">
+          <label>Handover Notes</label>
+          <textarea id="shiftNotesInput" placeholder="Notes for the next shift..."></textarea>
+        </div>
+        <div class="field">
+          <label><input type="checkbox" id="shiftActiveInput" style="width:auto;margin-right:6px;">Set as active shift</label>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" id="shiftModalCancel">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Shift</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  const DB_KEY = "shift_ops_db_v1";
+  const CATEGORIES = ["Mechanical","Electrical","Software/IT","Safety","Quality","Process","Material","Other"];
+  const SEVERITIES = ["Critical","High","Medium","Low"];
+  const STATUSES = ["Open","In Progress","Resolved","Closed"];
+  const SEV_COLOR = {Critical:"var(--critical)",High:"var(--high)",Medium:"var(--medium)",Low:"var(--low)"};
+  const STATUS_COLOR = {Open:"var(--open)","In Progress":"var(--progress)",Resolved:"var(--resolved)",Closed:"var(--closed)"};
+
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+  function nowIso(){ return new Date().toISOString(); }
+  function fmtDateTime(iso){
+    if(!iso) return "-";
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined,{month:"short",day:"numeric"}) + " " + d.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"});
+  }
+  function esc(s){
+    return (s ?? "").toString().replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+
+  let db = loadDB();
+  function loadDB(){
+    try{
+      const raw = localStorage.getItem(DB_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){ console.warn("Failed to load DB", e); }
+    return { shifts: [], issues: [], engineers: [], rota: [], leaves: [] };
+  }
+  db.engineers = db.engineers || [];
+  db.rota = db.rota || [];
+  db.leaves = db.leaves || [];
+  function saveDB(){
+    localStorage.setItem(DB_KEY, JSON.stringify(db));
+  }
+
+  function toast(msg){
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(()=> t.classList.remove("show"), 2200);
+  }
+
+  function getActiveShift(){
+    return db.shifts.find(s => s.active) || null;
+  }
+  function shiftLabel(s){
+    if(!s) return "Unassigned";
+    return `${s.date} · ${s.type}`;
+  }
+
+  /* ================= AUTH: engineers, rota, session ================= */
+  const SESSION_KEY = "shift_ops_session_v1";
+  const LEAVE_TYPES = ["Casual","Sick","Earned","Comp-off","Other"];
+
+  function loadSession(){
+    try{
+      const raw = localStorage.getItem(SESSION_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){ console.warn("Failed to load session", e); }
+    return null;
+  }
+  function saveSession(s){ localStorage.setItem(SESSION_KEY, JSON.stringify(s)); }
+  function clearSession(){ localStorage.removeItem(SESSION_KEY); }
+  let session = loadSession();
+
+  function pad2(n){ return n.toString().padStart(2,"0"); }
+  function toDateStr(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+  function getCurrentShiftContext(now){
+    now = now || new Date();
+    const hour = now.getHours();
+    if(hour >= 6 && hour < 14) return { shiftType:"Morning", shiftDate: toDateStr(now), windowLabel:"06:00–14:00" };
+    if(hour >= 14 && hour < 22) return { shiftType:"Evening", shiftDate: toDateStr(now), windowLabel:"14:00–22:00" };
+    if(hour >= 22) return { shiftType:"Night", shiftDate: toDateStr(now), windowLabel:"22:00–06:00" };
+    const y = new Date(now); y.setDate(y.getDate()-1);
+    return { shiftType:"Night", shiftDate: toDateStr(y), windowLabel:"22:00–06:00" };
+  }
+  function findEngineer(id){ return db.engineers.find(e => e.id === id) || null; }
+  function isSupervisor(){ return !!session && session.role === "supervisor"; }
+
+  function showFormMsg(elId, text, type){
+    const el = document.getElementById(elId);
+    el.textContent = text;
+    el.className = "form-msg show " + type;
+  }
+  function clearFormMsg(elId){
+    const el = document.getElementById(elId);
+    el.textContent = "";
+    el.className = "form-msg";
+  }
+
+  function resetToDefaultTab(){
+    tabButtons.forEach(b => b.classList.toggle("active", b.dataset.tab === "dashboard"));
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.getElementById("view-dashboard").classList.add("active");
+  }
+
+  function applyRoleVisibility(){
+    document.querySelectorAll("[data-supervisor-only]").forEach(el => {
+      el.style.display = isSupervisor() ? "" : "none";
+    });
+  }
+
+  function renderSessionPill(){
+    const pill = document.getElementById("sessionPill");
+    if(!session){ pill.innerHTML = ""; return; }
+    const eng = findEngineer(session.engineerId);
+    const name = eng ? eng.name : "Unknown";
+    pill.innerHTML = `<span class="dot"></span><span>${esc(name)} · ${esc(session.role === "supervisor" ? "Supervisor" : "Engineer")}${session.shiftType ? " · " + esc(session.shiftType) + " shift" : ""}</span>`;
+  }
+
+  function renderLoginScreen(){
+    const hasEngineers = db.engineers.length > 0;
+    document.getElementById("bootstrapPane").style.display = hasEngineers ? "none" : "block";
+    document.getElementById("loginPane").style.display = hasEngineers ? "block" : "none";
+    if(hasEngineers){
+      const sel = document.getElementById("loginEngineerSelect");
+      sel.innerHTML = db.engineers.slice().sort((a,b)=>a.name.localeCompare(b.name))
+        .map(e => `<option value="${e.id}">${esc(e.name)}${e.role==="supervisor"?" (Supervisor)":""}</option>`).join("");
+      const ctx = getCurrentShiftContext();
+      document.getElementById("shiftContextBanner").innerHTML =
+        `Current shift window: ${badge(ctx.shiftType,"shift")} <span style="color:var(--text-muted);">(${ctx.windowLabel})</span>`;
+    }
+  }
+
+  function refreshAuth(){
+    if(session){
+      document.body.classList.add("logged-in");
+      resetToDefaultTab();
+      renderSessionPill();
+      applyRoleVisibility();
+      renderAll();
+    }else{
+      document.body.classList.remove("logged-in");
+      renderLoginScreen();
+    }
+  }
+
+  document.getElementById("bootstrapForm").addEventListener("submit", e => {
+    e.preventDefault();
+    clearFormMsg("bootstrapMsg");
+    const name = document.getElementById("bsName").value.trim();
+    const employeeId = document.getElementById("bsEmpId").value.trim();
+    const pin = document.getElementById("bsPin").value.trim();
+    const pinConfirm = document.getElementById("bsPinConfirm").value.trim();
+    if(!name){ showFormMsg("bootstrapMsg","Name is required","error"); return; }
+    if(!/^[0-9]{4,6}$/.test(pin)){ showFormMsg("bootstrapMsg","PIN must be 4-6 digits","error"); return; }
+    if(pin !== pinConfirm){ showFormMsg("bootstrapMsg","PINs do not match","error"); return; }
+
+    const engineer = { id: uid(), name, employeeId, role:"supervisor", pin, createdAt: nowIso() };
+    db.engineers.push(engineer);
+    saveDB();
+    const ctx = getCurrentShiftContext();
+    session = { engineerId: engineer.id, role:"supervisor", loginAt: nowIso(), shiftType: ctx.shiftType, shiftDate: ctx.shiftDate };
+    saveSession(session);
+    toast(`Welcome, ${name}! Supervisor account created.`);
+    refreshAuth();
+  });
+
+  document.getElementById("loginForm").addEventListener("submit", e => {
+    e.preventDefault();
+    clearFormMsg("loginMsg");
+    const engineerId = document.getElementById("loginEngineerSelect").value;
+    const pin = document.getElementById("loginPin").value.trim();
+    const eng = findEngineer(engineerId);
+    if(!eng){ showFormMsg("loginMsg","Select your name","error"); return; }
+    if(eng.pin !== pin){ showFormMsg("loginMsg","Incorrect PIN","error"); return; }
+
+    const ctx = getCurrentShiftContext();
+    if(eng.role !== "supervisor"){
+      const rostered = db.rota.some(r => r.engineerId === eng.id && r.date === ctx.shiftDate && r.shiftType === ctx.shiftType);
+      if(!rostered){
+        const mine = db.rota.filter(r => r.engineerId === eng.id).sort((a,b)=> new Date(b.date)-new Date(a.date)).slice(0,3);
+        const mineText = mine.length
+          ? "Your rostered shifts: " + mine.map(r => `${r.date} (${r.shiftType})`).join(", ")
+          : "You have no rota entries yet — ask your supervisor to add you to the shift rota.";
+        showFormMsg("loginMsg", `You're not rostered for the current ${ctx.shiftType} shift (${ctx.windowLabel}). ${mineText}`, "error");
+        return;
+      }
+    }
+    session = { engineerId: eng.id, role: eng.role, loginAt: nowIso(), shiftType: ctx.shiftType, shiftDate: ctx.shiftDate };
+    saveSession(session);
+    document.getElementById("loginForm").reset();
+    toast(`Welcome back, ${eng.name}`);
+    refreshAuth();
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    session = null;
+    clearSession();
+    refreshAuth();
+  });
+
+  /* ---------------- Tabs ---------------- */
+  const tabButtons = document.querySelectorAll("nav.tabs button");
+  tabButtons.forEach(btn => {
+    btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+  });
+  function switchTab(tab){
+    const targetBtn = document.querySelector(`nav.tabs button[data-tab="${tab}"]`);
+    if(targetBtn && targetBtn.hasAttribute("data-supervisor-only") && !isSupervisor()){
+      tab = "dashboard";
+    }
+    tabButtons.forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.getElementById("view-" + tab).classList.add("active");
+    if(tab === "dashboard") renderDashboard();
+    if(tab === "issues") renderIssues();
+    if(tab === "shifts") renderShifts();
+    if(tab === "reports") renderReports();
+    if(tab === "leaves") renderLeaves();
+    if(tab === "engineers") renderEngineers();
+    if(tab === "rota") renderRota();
+  }
+
+  /* ---------------- Theme ---------------- */
+  const root = document.documentElement;
+  function applyTheme(t){
+    root.setAttribute("data-theme", t);
+    localStorage.setItem("shift_ops_theme", t);
+  }
+  applyTheme(localStorage.getItem("shift_ops_theme") || "light");
+  document.getElementById("themeToggle").addEventListener("click", () => {
+    applyTheme(root.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  });
+
+  /* ---------------- Header active shift pill ---------------- */
+  function renderActivePill(){
+    const pill = document.getElementById("activeShiftPill");
+    const s = getActiveShift();
+    if(s){
+      pill.innerHTML = `<span class="dot"></span><span>Active: ${esc(shiftLabel(s))}${s.supervisor ? " · " + esc(s.supervisor) : ""}</span>`;
+    }else{
+      pill.innerHTML = `<span class="dot" style="background:#c9ccd4;box-shadow:none;"></span><span>No active shift</span>`;
+    }
+  }
+
+  /* ================= DASHBOARD ================= */
+  function renderDashboard(){
+    renderActivePill();
+    const issues = db.issues;
+    const open = issues.filter(i => i.status === "Open");
+    const inProgress = issues.filter(i => i.status === "In Progress");
+    const critical = issues.filter(i => i.status !== "Resolved" && i.status !== "Closed" && i.severity === "Critical");
+    const resolvedToday = issues.filter(i => i.resolvedAt && new Date(i.resolvedAt).toDateString() === new Date().toDateString());
+    const total = issues.length;
+
+    const kpis = [
+      {label:"Open Issues", value:open.length, color:"var(--open)"},
+      {label:"In Progress", value:inProgress.length, color:"var(--progress)"},
+      {label:"Critical (unresolved)", value:critical.length, color:"var(--critical)"},
+      {label:"Resolved Today", value:resolvedToday.length, color:"var(--resolved)"},
+      {label:"Total Logged", value:total, color:"var(--primary)"},
+    ];
+    document.getElementById("kpiGrid").innerHTML = kpis.map(k => `
+      <div class="kpi">
+        <div class="label">${k.label}</div>
+        <div class="value">${k.value}</div>
+        <div class="bar"><span style="width:${total? Math.min(100,(k.value/Math.max(total,1))*100):0}%;background:${k.color};"></span></div>
+      </div>
+    `).join("");
+
+    const unresolved = issues.filter(i => i.status !== "Resolved" && i.status !== "Closed");
+    const sevCounts = SEVERITIES.map(s => ({key:s, count: unresolved.filter(i => i.severity === s).length}));
+    document.getElementById("sevBreakdown").innerHTML = breakdownHtml(sevCounts, SEV_COLOR);
+
+    const catCounts = CATEGORIES.map(c => ({key:c, count: unresolved.filter(i => i.category === c).length})).filter(c => c.count > 0 || true);
+    document.getElementById("catBreakdown").innerHTML = breakdownHtml(catCounts.length ? catCounts : [{key:"None", count:0}], {}, "var(--primary)");
+
+    const recent = [...issues].sort((a,b) => new Date(b.updatedAt||b.reportedAt) - new Date(a.updatedAt||a.reportedAt)).slice(0,8);
+    document.getElementById("recentTableWrap").innerHTML = recent.length ? `
+      <table>
+        <thead><tr><th>Issue</th><th>Severity</th><th>Status</th><th>Shift</th><th>Updated</th></tr></thead>
+        <tbody>
+          ${recent.map(i => `
+            <tr>
+              <td><div class="issue-title">${esc(i.title)}</div></td>
+              <td>${badge(i.severity,"sev")}</td>
+              <td>${badge(i.status,"st")}</td>
+              <td>${esc(shiftLabel(db.shifts.find(s=>s.id===i.shiftId)))}</td>
+              <td>${fmtDateTime(i.updatedAt || i.reportedAt)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>` : emptyState("📭","No issues logged yet");
+  }
+
+  function breakdownHtml(items, colorMap, fallbackColor){
+    const max = Math.max(1, ...items.map(i => i.count));
+    return items.map(i => `
+      <div class="breakdown-row">
+        <div class="label">${esc(i.key)}</div>
+        <div class="track"><span style="width:${(i.count/max)*100}%;background:${colorMap[i.key] || fallbackColor || 'var(--primary)'};"></span></div>
+        <div class="count">${i.count}</div>
+      </div>
+    `).join("");
+  }
+
+  function badge(value, prefix){
+    const cls = prefix + "-" + value.replace(/\s+/g,"");
+    return `<span class="badge ${cls}">${esc(value)}</span>`;
+  }
+  function emptyState(icon,msg){
+    return `<div class="empty-state"><div class="big">${icon}</div><div>${msg}</div></div>`;
+  }
+
+  /* ================= ISSUES ================= */
+  function populateCategorySelects(){
+    const filterSel = document.getElementById("fltCategory");
+    const prev = filterSel.value;
+    filterSel.innerHTML = `<option value="">All categories</option>` + CATEGORIES.map(c=>`<option>${c}</option>`).join("");
+    filterSel.value = prev;
+  }
+  function populateShiftSelects(){
+    const issueSel = document.getElementById("issueShiftInput");
+    const prevIssueSel = issueSel.value;
+    const opts = `<option value="">Unassigned</option>` + db.shifts
+      .slice().sort((a,b)=> new Date(b.date)-new Date(a.date))
+      .map(s => `<option value="${s.id}">${esc(shiftLabel(s))}${s.active?" (active)":""}</option>`).join("");
+    issueSel.innerHTML = opts;
+    issueSel.value = prevIssueSel;
+
+    const fltShiftSel = document.getElementById("fltShift");
+    const prevFltShift = fltShiftSel.value;
+    const fltOpts = `<option value="">All shifts</option>` + db.shifts
+      .slice().sort((a,b)=> new Date(b.date)-new Date(a.date))
+      .map(s => `<option value="${s.id}">${esc(shiftLabel(s))}</option>`).join("");
+    fltShiftSel.innerHTML = fltOpts;
+    fltShiftSel.value = prevFltShift;
+
+    const reportSel = document.getElementById("reportShiftSelect");
+    const prevReportSel = reportSel.value;
+    reportSel.innerHTML = db.shifts.length
+      ? db.shifts.slice().sort((a,b)=> new Date(b.date)-new Date(a.date)).map(s => `<option value="${s.id}">${esc(shiftLabel(s))}</option>`).join("")
+      : `<option value="">No shifts yet</option>`;
+    reportSel.value = prevReportSel;
+  }
+
+  function getFilteredIssues(){
+    const q = document.getElementById("fltSearch").value.trim().toLowerCase();
+    const status = document.getElementById("fltStatus").value;
+    const severity = document.getElementById("fltSeverity").value;
+    const category = document.getElementById("fltCategory").value;
+    const shiftId = document.getElementById("fltShift").value;
+    return db.issues.filter(i => {
+      if(status && i.status !== status) return false;
+      if(severity && i.severity !== severity) return false;
+      if(category && i.category !== category) return false;
+      if(shiftId && i.shiftId !== shiftId) return false;
+      if(q){
+        const hay = `${i.title} ${i.description} ${i.location}`.toLowerCase();
+        if(!hay.includes(q)) return false;
+      }
+      return true;
+    }).sort((a,b) => new Date(b.reportedAt) - new Date(a.reportedAt));
+  }
+
+  function renderIssues(){
+    populateCategorySelects();
+    populateShiftSelects();
+    const list = getFilteredIssues();
+    const tbody = document.getElementById("issuesTbody");
+    if(!list.length){
+      tbody.innerHTML = `<tr><td colspan="9">${emptyState("🔍","No issues match your filters")}</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = list.map(i => `
+      <tr>
+        <td>
+          <div class="issue-title">${esc(i.title)}</div>
+          ${i.description ? `<div class="issue-desc">${esc(i.description)}</div>` : ""}
+        </td>
+        <td>${esc(i.category)}</td>
+        <td>${badge(i.severity,"sev")}</td>
+        <td>${esc(i.location) || "-"}</td>
+        <td>${esc(shiftLabel(db.shifts.find(s=>s.id===i.shiftId)))}</td>
+        <td>${esc(i.assignedTo) || "-"}</td>
+        <td>
+          <select class="status-select" data-id="${i.id}">
+            ${STATUSES.map(s => `<option ${s===i.status?"selected":""}>${s}</option>`).join("")}
+          </select>
+        </td>
+        <td>${fmtDateTime(i.reportedAt)}</td>
+        <td>
+          <div class="row-actions">
+            <button class="btn btn-ghost btn-sm" data-edit="${i.id}">Edit</button>
+            <button class="btn btn-danger btn-sm" data-del="${i.id}">Del</button>
+          </div>
+        </td>
+      </tr>
+    `).join("");
+
+    tbody.querySelectorAll(".status-select").forEach(sel => {
+      sel.addEventListener("change", () => {
+        const issue = db.issues.find(x => x.id === sel.dataset.id);
+        if(!issue) return;
+        issue.status = sel.value;
+        issue.updatedAt = nowIso();
+        if(sel.value === "Resolved" || sel.value === "Closed"){
+          issue.resolvedAt = issue.resolvedAt || nowIso();
+        }else{
+          issue.resolvedAt = null;
+        }
+        saveDB();
+        renderIssues();
+        toast(`Status updated to "${sel.value}"`);
+      });
+    });
+    tbody.querySelectorAll("[data-edit]").forEach(btn => {
+      btn.addEventListener("click", () => openIssueModal(db.issues.find(x => x.id === btn.dataset.edit)));
+    });
+    tbody.querySelectorAll("[data-del]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if(confirm("Delete this issue? This cannot be undone.")){
+          db.issues = db.issues.filter(x => x.id !== btn.dataset.del);
+          saveDB();
+          renderIssues();
+          toast("Issue deleted");
+        }
+      });
+    });
+  }
+
+  ["fltSearch","fltStatus","fltSeverity","fltCategory","fltShift"].forEach(id => {
+    document.getElementById(id).addEventListener("input", renderIssues);
+    document.getElementById(id).addEventListener("change", renderIssues);
+  });
+  document.getElementById("fltClear").addEventListener("click", () => {
+    document.getElementById("fltSearch").value = "";
+    document.getElementById("fltStatus").value = "";
+    document.getElementById("fltSeverity").value = "";
+    document.getElementById("fltCategory").value = "";
+    document.getElementById("fltShift").value = "";
+    renderIssues();
+  });
+
+  /* Issue Modal */
+  const issueOverlay = document.getElementById("issueOverlay");
+  function openIssueModal(issue){
+    populateShiftSelects();
+    document.getElementById("issueForm").reset();
+    document.getElementById("issueId").value = issue ? issue.id : "";
+    document.getElementById("issueModalTitle").textContent = issue ? "Edit Issue" : "Report Issue";
+    document.getElementById("issueTitleInput").value = issue?.title || "";
+    document.getElementById("issueDescInput").value = issue?.description || "";
+    document.getElementById("issueCategoryInput").value = issue?.category || "Mechanical";
+    document.getElementById("issueSeverityInput").value = issue?.severity || "Medium";
+    document.getElementById("issueLocationInput").value = issue?.location || "";
+    document.getElementById("issueStatusInput").value = issue?.status || "Open";
+    document.getElementById("issueReportedByInput").value = issue?.reportedBy || (!issue ? (findEngineer(session?.engineerId)?.name || "") : "");
+    document.getElementById("issueAssignedToInput").value = issue?.assignedTo || "";
+    document.getElementById("issueShiftInput").value = issue?.shiftId || (getActiveShift()?.id || "");
+    document.getElementById("issueResolutionInput").value = issue?.resolutionNotes || "";
+
+    const commentsSection = document.getElementById("commentsSection");
+    const commentList = document.getElementById("commentList");
+    if(issue && issue.comments && issue.comments.length){
+      commentsSection.style.display = "flex";
+      commentList.innerHTML = issue.comments.map(c => `
+        <div class="comment">${esc(c.text)}<div class="meta">${fmtDateTime(c.at)}</div></div>
+      `).join("");
+    }else{
+      commentsSection.style.display = "none";
+      commentList.innerHTML = "";
+    }
+    issueOverlay.classList.add("open");
+  }
+  function closeIssueModal(){ issueOverlay.classList.remove("open"); }
+  document.getElementById("issueModalClose").addEventListener("click", closeIssueModal);
+  document.getElementById("issueModalCancel").addEventListener("click", closeIssueModal);
+  issueOverlay.addEventListener("click", e => { if(e.target === issueOverlay) closeIssueModal(); });
+  document.getElementById("issuesAddBtn").addEventListener("click", () => openIssueModal(null));
+  document.getElementById("dashAddIssue").addEventListener("click", () => { switchTab("issues"); openIssueModal(null); });
+
+  document.getElementById("issueForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const id = document.getElementById("issueId").value;
+    const status = document.getElementById("issueStatusInput").value;
+    const existing = db.issues.find(x => x.id === id);
+    const payload = {
+      title: document.getElementById("issueTitleInput").value.trim(),
+      description: document.getElementById("issueDescInput").value.trim(),
+      category: document.getElementById("issueCategoryInput").value,
+      severity: document.getElementById("issueSeverityInput").value,
+      location: document.getElementById("issueLocationInput").value.trim(),
+      status,
+      reportedBy: document.getElementById("issueReportedByInput").value.trim(),
+      assignedTo: document.getElementById("issueAssignedToInput").value.trim(),
+      shiftId: document.getElementById("issueShiftInput").value || null,
+      resolutionNotes: document.getElementById("issueResolutionInput").value.trim(),
+      updatedAt: nowIso(),
+    };
+    if(!payload.title){ toast("Title is required"); return; }
+
+    if(existing){
+      if(existing.status !== status && (status === "Resolved" || status === "Closed") && !existing.resolvedAt){
+        payload.resolvedAt = nowIso();
+      }else if(status !== "Resolved" && status !== "Closed"){
+        payload.resolvedAt = null;
+      }
+      Object.assign(existing, payload);
+      existing.comments = existing.comments || [];
+      existing.comments.push({text:`Updated (status: ${status})`, at: nowIso()});
+      toast("Issue updated");
+    }else{
+      db.issues.push({
+        id: uid(),
+        ...payload,
+        reportedAt: nowIso(),
+        resolvedAt: (status === "Resolved" || status === "Closed") ? nowIso() : null,
+        comments: [{text:"Issue reported", at: nowIso()}],
+      });
+      toast("Issue reported");
+    }
+    saveDB();
+    closeIssueModal();
+    renderIssues();
+    renderDashboard();
+  });
+
+  /* ================= SHIFTS ================= */
+  function renderShifts(){
+    const grid = document.getElementById("shiftsGrid");
+    if(!db.shifts.length){
+      grid.innerHTML = emptyState("🕒","No shifts created yet. Click \"New Shift\" to get started.");
+      return;
+    }
+    const sorted = [...db.shifts].sort((a,b) => new Date(b.date) - new Date(a.date));
+    grid.innerHTML = sorted.map(s => {
+      const shiftIssues = db.issues.filter(i => i.shiftId === s.id);
+      const open = shiftIssues.filter(i => i.status !== "Resolved" && i.status !== "Closed").length;
+      const critical = shiftIssues.filter(i => i.severity === "Critical" && i.status !== "Resolved" && i.status !== "Closed").length;
+      return `
+      <div class="shift-card ${s.active ? "active" : ""}" style="flex:1 1 300px;">
+        <div class="top">
+          <div>
+            <h4>${esc(s.date)} · ${esc(s.type)}</h4>
+            <div class="meta">${s.supervisor ? "Supervisor: " + esc(s.supervisor) : "No supervisor set"}</div>
+          </div>
+          ${s.active ? `<span class="badge st-Open" style="background:#e6f7ec;color:var(--resolved);">● ACTIVE</span>` : ""}
+        </div>
+        <div class="tags">
+          ${(s.team||[]).map(t => `<span class="tag">${esc(t)}</span>`).join("") || `<span class="tag">No team listed</span>`}
+        </div>
+        <div class="stats">
+          <div><b>${shiftIssues.length}</b>Total Issues</div>
+          <div><b style="color:var(--open);">${open}</b>Open</div>
+          <div><b style="color:var(--critical);">${critical}</b>Critical</div>
+        </div>
+        ${s.notes ? `<div class="meta" style="margin-top:10px;">📝 ${esc(s.notes)}</div>` : ""}
+        <div class="actions">
+          ${!s.active ? `<button class="btn btn-ghost btn-sm" data-activate="${s.id}">Set Active</button>` : `<button class="btn btn-ghost btn-sm" data-deactivate="${s.id}">End Shift</button>`}
+          <button class="btn btn-ghost btn-sm" data-edit-shift="${s.id}">Edit</button>
+          <button class="btn btn-danger btn-sm" data-del-shift="${s.id}">Delete</button>
+        </div>
+      </div>`;
+    }).join("");
+
+    grid.querySelectorAll("[data-activate]").forEach(btn => btn.addEventListener("click", () => {
+      db.shifts.forEach(s => s.active = false);
+      const s = db.shifts.find(x => x.id === btn.dataset.activate);
+      s.active = true;
+      saveDB(); renderShifts(); renderActivePill();
+      toast("Shift set as active");
+    }));
+    grid.querySelectorAll("[data-deactivate]").forEach(btn => btn.addEventListener("click", () => {
+      const s = db.shifts.find(x => x.id === btn.dataset.deactivate);
+      s.active = false;
+      saveDB(); renderShifts(); renderActivePill();
+      toast("Shift ended");
+    }));
+    grid.querySelectorAll("[data-edit-shift]").forEach(btn => btn.addEventListener("click", () => {
+      openShiftModal(db.shifts.find(x => x.id === btn.dataset.editShift));
+    }));
+    grid.querySelectorAll("[data-del-shift]").forEach(btn => btn.addEventListener("click", () => {
+      if(confirm("Delete this shift? Issues linked to it will become unassigned.")){
+        db.issues.forEach(i => { if(i.shiftId === btn.dataset.delShift) i.shiftId = null; });
+        db.shifts = db.shifts.filter(x => x.id !== btn.dataset.delShift);
+        saveDB(); renderShifts(); renderActivePill();
+        toast("Shift deleted");
+      }
+    }));
+  }
+
+  const shiftOverlay = document.getElementById("shiftOverlay");
+  function openShiftModal(shift){
+    document.getElementById("shiftForm").reset();
+    document.getElementById("shiftId").value = shift ? shift.id : "";
+    document.getElementById("shiftModalTitle").textContent = shift ? "Edit Shift" : "New Shift";
+    document.getElementById("shiftDateInput").value = shift?.date || new Date().toISOString().slice(0,10);
+    document.getElementById("shiftTypeInput").value = shift?.type || "Morning";
+    document.getElementById("shiftSupervisorInput").value = shift?.supervisor || "";
+    document.getElementById("shiftTeamInput").value = (shift?.team || []).join(", ");
+    document.getElementById("shiftNotesInput").value = shift?.notes || "";
+    document.getElementById("shiftActiveInput").checked = !!shift?.active;
+    shiftOverlay.classList.add("open");
+  }
+  function closeShiftModal(){ shiftOverlay.classList.remove("open"); }
+  document.getElementById("shiftModalClose").addEventListener("click", closeShiftModal);
+  document.getElementById("shiftModalCancel").addEventListener("click", closeShiftModal);
+  shiftOverlay.addEventListener("click", e => { if(e.target === shiftOverlay) closeShiftModal(); });
+  document.getElementById("shiftsAddBtn").addEventListener("click", () => openShiftModal(null));
+
+  document.getElementById("shiftForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const id = document.getElementById("shiftId").value;
+    const active = document.getElementById("shiftActiveInput").checked;
+    const payload = {
+      date: document.getElementById("shiftDateInput").value,
+      type: document.getElementById("shiftTypeInput").value,
+      supervisor: document.getElementById("shiftSupervisorInput").value.trim(),
+      team: document.getElementById("shiftTeamInput").value.split(",").map(t=>t.trim()).filter(Boolean),
+      notes: document.getElementById("shiftNotesInput").value.trim(),
+      active,
+    };
+    if(active) db.shifts.forEach(s => s.active = false);
+
+    const existing = db.shifts.find(x => x.id === id);
+    if(existing){
+      Object.assign(existing, payload);
+      toast("Shift updated");
+    }else{
+      db.shifts.push({ id: uid(), ...payload, createdAt: nowIso() });
+      toast("Shift created");
+    }
+    saveDB();
+    closeShiftModal();
+    renderShifts();
+    renderActivePill();
+    renderDashboard();
+  });
+
+  /* ================= REPORTS ================= */
+  function renderReports(){
+    populateShiftSelects();
+    renderHandoverPreview();
+  }
+  document.getElementById("reportShiftSelect").addEventListener("change", renderHandoverPreview);
+  function renderHandoverPreview(){
+    const sel = document.getElementById("reportShiftSelect");
+    const shift = db.shifts.find(s => s.id === sel.value);
+    const container = document.getElementById("handoverPreview");
+    if(!shift){
+      container.innerHTML = emptyState("📄","Create a shift to generate a handover report");
+      return;
+    }
+    const issues = db.issues.filter(i => i.shiftId === shift.id);
+    const open = issues.filter(i => i.status !== "Resolved" && i.status !== "Closed");
+    const resolved = issues.filter(i => i.status === "Resolved" || i.status === "Closed");
+    container.innerHTML = `
+      <div id="handoverContent">
+        <h3>Handover Report — ${esc(shift.date)} (${esc(shift.type)})</h3>
+        <p class="sub" style="margin:6px 0 14px;">Supervisor: ${esc(shift.supervisor)||"-"} · Team: ${esc((shift.team||[]).join(", "))||"-"}</p>
+        ${shift.notes ? `<p style="margin-bottom:14px;"><b>Notes:</b> ${esc(shift.notes)}</p>` : ""}
+        <h4 style="margin-bottom:8px;">Open / Unresolved Issues (${open.length})</h4>
+        ${open.length ? `<ul style="margin:0 0 16px 20px;">${open.map(i=>`<li>[${esc(i.severity)}] ${esc(i.title)} ${i.assignedTo?`— assigned to ${esc(i.assignedTo)}`:""}</li>`).join("")}</ul>` : `<p class="sub" style="margin-bottom:16px;">None 🎉</p>`}
+        <h4 style="margin-bottom:8px;">Resolved / Closed (${resolved.length})</h4>
+        ${resolved.length ? `<ul style="margin:0 0 4px 20px;">${resolved.map(i=>`<li>${esc(i.title)} — ${esc(i.resolutionNotes)||"resolved"}</li>`).join("")}</ul>` : `<p class="sub">None</p>`}
+      </div>
+    `;
+  }
+  document.getElementById("printReportBtn").addEventListener("click", () => {
+    if(!db.shifts.length){ toast("No shifts to report on"); return; }
+    window.print();
+  });
+  document.getElementById("exportCsvBtn").addEventListener("click", () => {
+    if(!db.issues.length){ toast("No issues to export"); return; }
+    const headers = ["Title","Description","Category","Severity","Status","Location","Shift","ReportedBy","AssignedTo","ReportedAt","ResolvedAt","ResolutionNotes"];
+    const rows = db.issues.map(i => [
+      i.title, i.description, i.category, i.severity, i.status, i.location,
+      shiftLabel(db.shifts.find(s=>s.id===i.shiftId)), i.reportedBy, i.assignedTo,
+      i.reportedAt, i.resolvedAt || "", i.resolutionNotes
+    ].map(v => `"${(v||"").toString().replace(/"/g,'""')}"`).join(","));
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], {type:"text/csv"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `shift-issues-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast("CSV exported");
+  });
+
+  /* ================= ENGINEERS ================= */
+  function populateEngineerSelects(){
+    const opts = db.engineers.slice().sort((a,b)=>a.name.localeCompare(b.name))
+      .map(e => `<option value="${e.id}">${esc(e.name)}</option>`).join("");
+
+    const rotaSel = document.getElementById("rotaEngineerInput");
+    if(rotaSel){
+      const prev = rotaSel.value;
+      rotaSel.innerHTML = db.engineers.length
+        ? `<option value="">Select engineer…</option>` + opts
+        : `<option value="">No engineers yet</option>`;
+      rotaSel.value = prev;
+    }
+    const leaveSel = document.getElementById("leaveEngineerInput");
+    if(leaveSel){
+      const prev = leaveSel.value;
+      leaveSel.innerHTML = opts || `<option value="">No engineers yet</option>`;
+      leaveSel.value = prev;
+    }
+    const fltLeaveSel = document.getElementById("fltLeaveEngineer");
+    if(fltLeaveSel){
+      const prev = fltLeaveSel.value;
+      fltLeaveSel.innerHTML = `<option value="">All engineers</option>` + opts;
+      fltLeaveSel.value = prev;
+    }
+  }
+
+  function renderEngineers(){
+    const tbody = document.getElementById("engineersTbody");
+    if(!db.engineers.length){ tbody.innerHTML = `<tr><td colspan="4">${emptyState("👷","No engineers yet")}</td></tr>`; return; }
+    const sorted = db.engineers.slice().sort((a,b)=>a.name.localeCompare(b.name));
+    tbody.innerHTML = sorted.map(e => `
+      <tr>
+        <td class="issue-title">${esc(e.name)}</td>
+        <td>${esc(e.employeeId) || "-"}</td>
+        <td><span class="tag">${e.role === "supervisor" ? "Supervisor" : "Engineer"}</span></td>
+        <td>
+          <div class="row-actions">
+            <button class="btn btn-ghost btn-sm" data-edit-eng="${e.id}">Edit</button>
+            <button class="btn btn-danger btn-sm" data-del-eng="${e.id}" ${e.id===session.engineerId?"disabled":""}>Del</button>
+          </div>
+        </td>
+      </tr>
+    `).join("");
+    tbody.querySelectorAll("[data-edit-eng]").forEach(btn => btn.addEventListener("click", () => openEngineerForm(findEngineer(btn.dataset.editEng))));
+    tbody.querySelectorAll("[data-del-eng]").forEach(btn => btn.addEventListener("click", () => {
+      if(btn.disabled) return;
+      if(confirm("Delete this engineer? Their rota entries and leave records will remain but be unassigned.")){
+        db.engineers = db.engineers.filter(x => x.id !== btn.dataset.delEng);
+        saveDB();
+        renderEngineers();
+        populateEngineerSelects();
+        toast("Engineer removed");
+      }
+    }));
+  }
+
+  function openEngineerForm(eng){
+    document.getElementById("engineerId").value = eng ? eng.id : "";
+    document.getElementById("engineerFormTitle").textContent = eng ? "Edit Engineer" : "Add Engineer";
+    document.getElementById("engNameInput").value = eng?.name || "";
+    document.getElementById("engEmpIdInput").value = eng?.employeeId || "";
+    document.getElementById("engRoleInput").value = eng?.role || "engineer";
+    document.getElementById("engPinInput").value = "";
+    document.getElementById("engPinInput").placeholder = eng ? "Leave blank to keep current PIN" : "Required, 4-6 digits";
+    document.getElementById("engineerFormCancel").style.display = eng ? "inline-flex" : "none";
+    clearFormMsg("engineerFormMsg");
+  }
+  document.getElementById("engineerFormCancel").addEventListener("click", () => openEngineerForm(null));
+
+  document.getElementById("engineerForm").addEventListener("submit", e => {
+    e.preventDefault();
+    clearFormMsg("engineerFormMsg");
+    const id = document.getElementById("engineerId").value;
+    const name = document.getElementById("engNameInput").value.trim();
+    const employeeId = document.getElementById("engEmpIdInput").value.trim();
+    const role = document.getElementById("engRoleInput").value;
+    const pin = document.getElementById("engPinInput").value.trim();
+    if(!name){ showFormMsg("engineerFormMsg","Name is required","error"); return; }
+    if(pin && !/^[0-9]{4,6}$/.test(pin)){ showFormMsg("engineerFormMsg","PIN must be 4-6 digits","error"); return; }
+
+    const existing = db.engineers.find(x => x.id === id);
+    if(existing){
+      if(!pin && !existing.pin){ showFormMsg("engineerFormMsg","PIN is required","error"); return; }
+      existing.name = name; existing.employeeId = employeeId; existing.role = role;
+      if(pin) existing.pin = pin;
+      toast("Engineer updated");
+    }else{
+      if(!pin){ showFormMsg("engineerFormMsg","PIN is required","error"); return; }
+      db.engineers.push({ id: uid(), name, employeeId, role, pin, createdAt: nowIso() });
+      toast("Engineer added");
+    }
+    saveDB();
+    openEngineerForm(null);
+    renderEngineers();
+    populateEngineerSelects();
+    renderSessionPill();
+  });
+
+  /* ================= ROTA ================= */
+  function renderRota(){
+    populateEngineerSelects();
+    const tbody = document.getElementById("rotaTbody");
+    if(!db.rota.length){ tbody.innerHTML = `<tr><td colspan="4">${emptyState("📋","No rota entries yet")}</td></tr>`; return; }
+    const sorted = db.rota.slice().sort((a,b)=> new Date(b.date) - new Date(a.date) || a.shiftType.localeCompare(b.shiftType));
+    tbody.innerHTML = sorted.map(r => {
+      const eng = findEngineer(r.engineerId);
+      return `
+      <tr>
+        <td>${esc(r.date)}</td>
+        <td>${badge(r.shiftType,"shift")}</td>
+        <td>${eng ? esc(eng.name) : "<em>Removed engineer</em>"}</td>
+        <td>
+          <div class="row-actions">
+            <button class="btn btn-ghost btn-sm" data-edit-rota="${r.id}">Edit</button>
+            <button class="btn btn-danger btn-sm" data-del-rota="${r.id}">Del</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join("");
+    tbody.querySelectorAll("[data-edit-rota]").forEach(btn => btn.addEventListener("click", () => openRotaForm(db.rota.find(x=>x.id===btn.dataset.editRota))));
+    tbody.querySelectorAll("[data-del-rota]").forEach(btn => btn.addEventListener("click", () => {
+      if(confirm("Remove this rota entry?")){
+        db.rota = db.rota.filter(x => x.id !== btn.dataset.delRota);
+        saveDB(); renderRota(); toast("Rota entry removed");
+      }
+    }));
+  }
+
+  function openRotaForm(r){
+    document.getElementById("rotaId").value = r ? r.id : "";
+    document.getElementById("rotaFormTitle").textContent = r ? "Edit Rota Entry" : "Add Rota Entry";
+    document.getElementById("rotaDateInput").value = r?.date || new Date().toISOString().slice(0,10);
+    document.getElementById("rotaShiftInput").value = r?.shiftType || "Morning";
+    document.getElementById("rotaEngineerInput").value = r?.engineerId || "";
+    document.getElementById("rotaFormCancel").style.display = r ? "inline-flex" : "none";
+    clearFormMsg("rotaFormMsg");
+  }
+  document.getElementById("rotaFormCancel").addEventListener("click", () => openRotaForm(null));
+
+  document.getElementById("rotaForm").addEventListener("submit", e => {
+    e.preventDefault();
+    clearFormMsg("rotaFormMsg");
+    const id = document.getElementById("rotaId").value;
+    const date = document.getElementById("rotaDateInput").value;
+    const shiftType = document.getElementById("rotaShiftInput").value;
+    const engineerId = document.getElementById("rotaEngineerInput").value;
+    if(!date || !engineerId){ showFormMsg("rotaFormMsg","Date and engineer are required","error"); return; }
+    const dup = db.rota.find(x => x.id !== id && x.date === date && x.shiftType === shiftType && x.engineerId === engineerId);
+    if(dup){ showFormMsg("rotaFormMsg","This engineer is already rostered for that date/shift","error"); return; }
+
+    const existing = db.rota.find(x => x.id === id);
+    if(existing){
+      Object.assign(existing, {date, shiftType, engineerId});
+      toast("Rota entry updated");
+    }else{
+      db.rota.push({ id: uid(), date, shiftType, engineerId, createdAt: nowIso() });
+      toast("Rota entry added");
+    }
+    saveDB();
+    openRotaForm(null);
+    renderRota();
+  });
+
+  /* ================= LEAVES ================= */
+  function renderLeaves(){
+    populateEngineerSelects();
+    const supervisor = isSupervisor();
+    document.getElementById("leaveEngineerField").style.display = supervisor ? "flex" : "none";
+    document.getElementById("leaveFilterWrap").style.display = supervisor ? "flex" : "none";
+    document.getElementById("leavesSub").textContent = supervisor
+      ? "All engineers' leave history — persists across shift/rota changes"
+      : "Your leave history — kept with you across shift changes, visible only to you";
+
+    const fltId = supervisor ? document.getElementById("fltLeaveEngineer").value : session.engineerId;
+    const list = db.leaves
+      .filter(l => supervisor ? (!fltId || l.engineerId === fltId) : l.engineerId === session.engineerId)
+      .sort((a,b) => new Date(b.fromDate) - new Date(a.fromDate));
+
+    const tbody = document.getElementById("leavesTbody");
+    if(!list.length){ tbody.innerHTML = `<tr><td colspan="7">${emptyState("🗓️","No leave records")}</td></tr>`; return; }
+    tbody.innerHTML = list.map(l => {
+      const eng = findEngineer(l.engineerId);
+      const canManage = supervisor || l.engineerId === session.engineerId;
+      return `
+      <tr>
+        <td>${eng ? esc(eng.name) : "<em>Removed engineer</em>"}</td>
+        <td>${esc(l.fromDate)}</td>
+        <td>${esc(l.toDate)}</td>
+        <td>${esc(l.type)}</td>
+        <td>
+          ${supervisor
+            ? `<select class="status-select" data-leave-status="${l.id}">
+                ${["Recorded","Approved","Rejected"].map(s=>`<option ${s===l.status?"selected":""}>${s}</option>`).join("")}
+               </select>`
+            : badge(l.status,"lv")}
+        </td>
+        <td>${esc(l.reason) || "-"}</td>
+        <td>
+          ${canManage ? `<div class="row-actions">
+            <button class="btn btn-ghost btn-sm" data-edit-leave="${l.id}">Edit</button>
+            <button class="btn btn-danger btn-sm" data-del-leave="${l.id}">Del</button>
+          </div>` : ""}
+        </td>
+      </tr>`;
+    }).join("");
+
+    tbody.querySelectorAll("[data-leave-status]").forEach(sel => sel.addEventListener("change", () => {
+      const lv = db.leaves.find(x => x.id === sel.dataset.leaveStatus);
+      lv.status = sel.value;
+      saveDB(); renderLeaves(); toast("Leave status updated");
+    }));
+    tbody.querySelectorAll("[data-edit-leave]").forEach(btn => btn.addEventListener("click", () => openLeaveForm(db.leaves.find(x=>x.id===btn.dataset.editLeave))));
+    tbody.querySelectorAll("[data-del-leave]").forEach(btn => btn.addEventListener("click", () => {
+      if(confirm("Delete this leave record?")){
+        db.leaves = db.leaves.filter(x => x.id !== btn.dataset.delLeave);
+        saveDB(); renderLeaves(); toast("Leave record deleted");
+      }
+    }));
+  }
+
+  function openLeaveForm(l){
+    document.getElementById("leaveId").value = l ? l.id : "";
+    document.getElementById("leaveFormTitle").textContent = l ? "Edit Leave" : "Record Leave";
+    if(isSupervisor()) document.getElementById("leaveEngineerInput").value = l?.engineerId || session.engineerId;
+    document.getElementById("leaveFromInput").value = l?.fromDate || new Date().toISOString().slice(0,10);
+    document.getElementById("leaveToInput").value = l?.toDate || new Date().toISOString().slice(0,10);
+    document.getElementById("leaveTypeInput").value = l?.type || "Casual";
+    document.getElementById("leaveReasonInput").value = l?.reason || "";
+    document.getElementById("leaveFormCancel").style.display = l ? "inline-flex" : "none";
+    clearFormMsg("leaveFormMsg");
+  }
+  document.getElementById("leaveFormCancel").addEventListener("click", () => openLeaveForm(null));
+  document.getElementById("fltLeaveEngineer").addEventListener("change", renderLeaves);
+
+  document.getElementById("leaveForm").addEventListener("submit", e => {
+    e.preventDefault();
+    clearFormMsg("leaveFormMsg");
+    const id = document.getElementById("leaveId").value;
+    const engineerId = isSupervisor() ? document.getElementById("leaveEngineerInput").value : session.engineerId;
+    const fromDate = document.getElementById("leaveFromInput").value;
+    const toDate = document.getElementById("leaveToInput").value;
+    const type = document.getElementById("leaveTypeInput").value;
+    const reason = document.getElementById("leaveReasonInput").value.trim();
+    if(!engineerId || !fromDate || !toDate){ showFormMsg("leaveFormMsg","All fields are required","error"); return; }
+    if(new Date(toDate) < new Date(fromDate)){ showFormMsg("leaveFormMsg","'To' date can't be before 'From' date","error"); return; }
+
+    const existing = db.leaves.find(x => x.id === id);
+    if(existing){
+      Object.assign(existing, {engineerId, fromDate, toDate, type, reason});
+      toast("Leave record updated");
+    }else{
+      db.leaves.push({ id: uid(), engineerId, fromDate, toDate, type, reason, status:"Recorded", createdAt: nowIso() });
+      toast("Leave recorded");
+    }
+    saveDB();
+    openLeaveForm(null);
+    renderLeaves();
+  });
+
+  /* ================= Demo data / reset ================= */
+  document.getElementById("demoBtn").addEventListener("click", () => {
+    if(db.shifts.length || db.issues.length || db.engineers.length > 1){
+      if(!confirm("This will add sample shifts, issues and demo engineers to your existing data. Continue?")) return;
+    }
+    const today = new Date().toISOString().slice(0,10);
+    const s1 = { id: uid(), date: today, type:"Morning", supervisor:"Alex Rivera", team:["Sam","Priya","Jordan"], notes:"Line 3 running slow after maintenance.", active:true, createdAt: nowIso() };
+    const s2 = { id: uid(), date: today, type:"Night", supervisor:"Nina Chen", team:["Leo","Maria"], notes:"", active:false, createdAt: nowIso() };
+    db.shifts.push(s1, s2);
+    const sample = [
+      {title:"Conveyor belt motor overheating", description:"Motor on Line 3 reaching high temps, intermittent shutdown.", category:"Mechanical", severity:"Critical", status:"Open", location:"Line 3, Station 2", reportedBy:"Sam", assignedTo:"Maintenance Team", shiftId:s1.id},
+      {title:"Barcode scanner not reading labels", description:"Scanner at packing station failing ~30% of scans.", category:"Software/IT", severity:"High", status:"In Progress", location:"Packing Station 1", reportedBy:"Priya", assignedTo:"IT Support", shiftId:s1.id},
+      {title:"Missing safety guard on press", description:"Safety guard was left off after repair.", category:"Safety", severity:"Critical", status:"Open", location:"Press Line 2", reportedBy:"Jordan", assignedTo:"Alex Rivera", shiftId:s1.id},
+      {title:"Minor coolant leak", description:"Small drip observed near pump housing.", category:"Mechanical", severity:"Low", status:"Resolved", location:"Line 1", reportedBy:"Leo", assignedTo:"Leo", shiftId:s2.id, resolutionNotes:"Tightened fitting, no further leak."},
+      {title:"Batch quality out of tolerance", description:"Sample batch #4471 measured outside spec by 2%.", category:"Quality", severity:"Medium", status:"In Progress", location:"QC Lab", reportedBy:"Maria", assignedTo:"QC Team", shiftId:s2.id},
+      {title:"Raw material shortage - resin type B", description:"Only 2 hours of stock remaining.", category:"Material", severity:"High", status:"Open", location:"Warehouse", reportedBy:"Nina Chen", assignedTo:"Procurement", shiftId:s2.id},
+    ];
+    sample.forEach(payload => {
+      db.issues.push({
+        id: uid(), ...payload, resolutionNotes: payload.resolutionNotes || "",
+        reportedAt: nowIso(), updatedAt: nowIso(),
+        resolvedAt: payload.status === "Resolved" ? nowIso() : null,
+        comments: [{text:"Issue reported", at: nowIso()}],
+      });
+    });
+
+    const demoNames = ["Priya Nair","Sam Fischer","Jordan Blake"];
+    const demoEngineers = demoNames.filter(n => !db.engineers.some(e=>e.name===n)).map(n => ({
+      id: uid(), name:n, employeeId:"EMP-"+Math.floor(1000+Math.random()*9000), role:"engineer", pin:"1234", createdAt: nowIso()
+    }));
+    db.engineers.push(...demoEngineers);
+    if(demoEngineers.length){
+      const ctx = getCurrentShiftContext();
+      const rotaCandidates = [
+        { date: ctx.shiftDate, shiftType: ctx.shiftType, engineerId: demoEngineers[0].id },
+        { date: today, shiftType:"Morning", engineerId: demoEngineers[0].id },
+        { date: today, shiftType:"Evening", engineerId: demoEngineers[1] ? demoEngineers[1].id : demoEngineers[0].id },
+        { date: today, shiftType:"Night", engineerId: demoEngineers[2] ? demoEngineers[2].id : demoEngineers[0].id },
+      ];
+      const seen = new Set();
+      rotaCandidates.forEach(c => {
+        const key = c.date + "|" + c.shiftType;
+        if(seen.has(key)) return;
+        seen.add(key);
+        db.rota.push({ id: uid(), ...c, createdAt: nowIso() });
+      });
+    }
+
+    saveDB();
+    renderAll();
+    toast(demoEngineers.length ? "Sample data loaded — demo engineer PIN is 1234" : "Sample data loaded");
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    if(confirm("This will permanently delete all shifts, issues, engineers, rota and leave records, and log you out. Continue?")){
+      db = { shifts: [], issues: [], engineers: [], rota: [], leaves: [] };
+      saveDB();
+      session = null;
+      clearSession();
+      toast("All data cleared");
+      refreshAuth();
+    }
+  });
+
+  function renderAll(){
+    renderActivePill();
+    renderSessionPill();
+    renderDashboard();
+    renderIssues();
+    renderShifts();
+    renderReports();
+    renderLeaves();
+    if(isSupervisor()){
+      renderEngineers();
+      renderRota();
+    }
+  }
+
+  refreshAuth();
+})();
+</script>
+</body>
+</html>
