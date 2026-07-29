@@ -248,10 +248,8 @@
   #toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
 
   .footer-note{text-align:center;color:var(--text-muted);font-size:.78rem;margin-top:30px;}
-  .print-only{display:none;}
   @media print{
     header.appbar, nav.tabs, .toolbar .btn, .filters, .no-print{display:none !important;}
-    .print-only{display:block;}
     body{background:#fff;color:#000;}
     main{padding:0;}
   }
@@ -375,7 +373,7 @@
         <div class="sub">Export data or print a shift handover report</div>
       </div>
     </div>
-    <div class="grid-2">
+    <div class="grid-2 no-print">
       <div class="card">
         <h3>Export Data</h3>
         <p class="sub" style="margin-bottom:14px;">Download all logged issues as a CSV file for further analysis.</p>
@@ -681,22 +679,33 @@
   /* ================= ISSUES ================= */
   function populateCategorySelects(){
     const filterSel = document.getElementById("fltCategory");
+    const prev = filterSel.value;
     filterSel.innerHTML = `<option value="">All categories</option>` + CATEGORIES.map(c=>`<option>${c}</option>`).join("");
+    filterSel.value = prev;
   }
   function populateShiftSelects(){
+    const issueSel = document.getElementById("issueShiftInput");
+    const prevIssueSel = issueSel.value;
     const opts = `<option value="">Unassigned</option>` + db.shifts
       .slice().sort((a,b)=> new Date(b.date)-new Date(a.date))
       .map(s => `<option value="${s.id}">${esc(shiftLabel(s))}${s.active?" (active)":""}</option>`).join("");
-    document.getElementById("issueShiftInput").innerHTML = opts;
+    issueSel.innerHTML = opts;
+    issueSel.value = prevIssueSel;
 
+    const fltShiftSel = document.getElementById("fltShift");
+    const prevFltShift = fltShiftSel.value;
     const fltOpts = `<option value="">All shifts</option>` + db.shifts
       .slice().sort((a,b)=> new Date(b.date)-new Date(a.date))
       .map(s => `<option value="${s.id}">${esc(shiftLabel(s))}</option>`).join("");
-    document.getElementById("fltShift").innerHTML = fltOpts;
+    fltShiftSel.innerHTML = fltOpts;
+    fltShiftSel.value = prevFltShift;
 
-    document.getElementById("reportShiftSelect").innerHTML = db.shifts.length
+    const reportSel = document.getElementById("reportShiftSelect");
+    const prevReportSel = reportSel.value;
+    reportSel.innerHTML = db.shifts.length
       ? db.shifts.slice().sort((a,b)=> new Date(b.date)-new Date(a.date)).map(s => `<option value="${s.id}">${esc(shiftLabel(s))}</option>`).join("")
       : `<option value="">No shifts yet</option>`;
+    reportSel.value = prevReportSel;
   }
 
   function getFilteredIssues(){
@@ -997,8 +1006,8 @@
   function renderReports(){
     populateShiftSelects();
     renderHandoverPreview();
-    document.getElementById("reportShiftSelect").addEventListener("change", renderHandoverPreview);
   }
+  document.getElementById("reportShiftSelect").addEventListener("change", renderHandoverPreview);
   function renderHandoverPreview(){
     const sel = document.getElementById("reportShiftSelect");
     const shift = db.shifts.find(s => s.id === sel.value);
