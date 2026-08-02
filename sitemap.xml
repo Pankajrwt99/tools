@@ -31,6 +31,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://www.industrialskills.in/article-660mw-supercritical-unit-operations.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://www.industrialskills.in/mock-test.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
