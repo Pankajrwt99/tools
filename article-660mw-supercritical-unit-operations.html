@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>660 MW Supercritical Unit Operations — Key Parameters &amp; Interview Questions | IndustrialSkills</title>
+<meta name="description" content="How 660 MW supercritical thermal power units differ from 500 MW subcritical units: once-through boiler design, typical operating parameters, and interview questions for NTPC and genco exams.">
+<link rel="canonical" href="https://www.industrialskills.in/article-660mw-supercritical-unit-operations.html">
+<meta property="og:title" content="660 MW Supercritical Unit Operations — Key Parameters & Interview Questions">
+<meta property="og:description" content="Once-through boiler design, typical operating parameters, and interview questions on 660 MW supercritical units.">
+<meta property="og:type" content="article">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "660 MW Supercritical Unit Operations — Key Parameters & Interview Questions",
+  "description": "How 660 MW supercritical thermal power units differ from 500 MW subcritical units: once-through boiler design, typical operating parameters, and interview questions for NTPC and genco exams.",
+  "author": {
+    "@type": "Person",
+    "name": "IndustrialSkills Founder",
+    "jobTitle": "Assistant Engineer, 500 MW Thermal Power Station"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "IndustrialSkills"
+  },
+  "datePublished": "2026-08-02",
+  "dateModified": "2026-08-02",
+  "mainEntityOfPage": "https://www.industrialskills.in/article-660mw-supercritical-unit-operations.html"
+}
+</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="nav-wrap">
+    <a href="index.html" class="logo">Industrial<span>Skills</span></a>
+    <button class="nav-toggle" aria-label="Toggle navigation">&#9776;</button>
+    <nav class="main-nav">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="ebooks.html">eBooks</a></li>
+        <li><a href="articles.html" class="active">Articles</a></li>
+        <li><a href="mock-test.html">Mock Test</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<section class="article-hero">
+  <div class="container">
+    <span class="badge" style="background:rgba(26,47,74,0.08); border-color:var(--navy); color:var(--navy);">Supercritical Units</span>
+    <h1>660 MW Supercritical Unit Operations — Key Parameters &amp; Interview Questions</h1>
+    <p class="article-meta">By a working Assistant Engineer, 500 MW Thermal Power Station &middot; Published August 2026 &middot; 9 min read</p>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="two-col">
+      <div class="article-body">
+
+        <p>Over the last decade, India's power sector has been shifting its new capacity additions from the older 500 MW subcritical fleet towards 660 MW and 700 MW <strong>supercritical</strong> units. If you've trained on a subcritical unit — like the 500 MW drum-type boiler I operate day to day — a supercritical unit looks familiar on the outside but runs on a genuinely different thermodynamic principle inside. NTPC and most state gencos now expect AE/JE candidates to know this distinction, so here's a working engineer's explanation of what actually changes.</p>
+
+        <h2>What Does "Supercritical" Actually Mean?</h2>
+        <p>Water has a critical point — around 221.2 bar and 374°C — above which there is no distinct boundary between liquid water and steam; the fluid moves smoothly from a dense liquid-like state to a light vapour-like state without ever "boiling" in the traditional sense. A <strong>subcritical</strong> unit, like a standard 500 MW boiler, always operates below this pressure, so it needs a steam drum to physically separate saturated water from saturated steam. A <strong>supercritical</strong> unit operates above the critical pressure, so that separation is no longer physically possible — and that single fact reshapes the entire boiler design.</p>
+
+        <h2>Once-Through Boiler Design — No Steam Drum</h2>
+        <p>This is the most exam-relevant difference: a supercritical boiler is a <strong>once-through (Benson-type) boiler</strong>. Feedwater enters the economiser, passes once through the furnace waterwall tubes, and emerges directly as superheated steam — there is no drum anywhere in the circuit to recirculate or separate water from steam.</p>
+        <table>
+          <thead>
+            <tr><th>Feature</th><th>500 MW Subcritical (Drum-Type)</th><th>660 MW Supercritical (Once-Through)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Boiler circuit</td><td>Natural/assisted circulation through a steam drum</td><td>Once-through; no drum</td></tr>
+            <tr><td>Water-steam separation</td><td>Physical separation in the drum</td><td>No separation needed above the critical point</td></tr>
+            <tr><td>Startup circulation</td><td>Natural circulation once boiling starts</td><td>Needs a Boiler Circulating Pump (BCP) at low loads/startup</td></tr>
+            <tr><td>Feedwater purity requirement</td><td>Stringent</td><td>Even more stringent — no drum to "buffer" impurities</td></tr>
+            <tr><td>Furnace waterwall tubes</td><td>Vertical, larger diameter</td><td>Often spiral-wound, smaller diameter, higher mass flux</td></tr>
+          </tbody>
+        </table>
+        <p>Because there's no drum to fall back on during low-load operation, most supercritical units run a <strong>Boiler Circulating Pump (BCP)</strong> below roughly 30-35% load to force enough flow through the waterwalls and keep tube metal temperatures safe. Above that load, flow is high enough that the BCP is normally stopped and the unit runs in pure once-through mode.</p>
+
+        <h2>Typical Operating Parameters</h2>
+        <p>Exact figures vary by design (BHEL, Toshiba/JSW, Doosan and others all supply this class of unit) and by coal quality, so treat the numbers below as representative ranges for comparison rather than a specific plant's exact figures.</p>
+        <table>
+          <thead>
+            <tr><th>Parameter</th><th>500 MW Subcritical (typical)</th><th>660 MW Supercritical (typical)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Main steam pressure</td><td>~170 kg/cm²(a)</td><td>~245-250 kg/cm²(a)</td></tr>
+            <tr><td>Main steam temperature</td><td>~537°C</td><td>~537-565°C</td></tr>
+            <tr><td>Reheat steam temperature</td><td>~537°C</td><td>~565°C</td></tr>
+            <tr><td>Approx. cycle/turbine efficiency</td><td>~38-40%</td><td>~42-45%</td></tr>
+            <tr><td>Coal consumption at full load</td><td>Lower (scaled to capacity)</td><td>Higher in absolute tonnes/day, but lower per MWh generated</td></tr>
+            <tr><td>ESP efficiency</td><td>&gt;99.9%</td><td>&gt;99.9%</td></tr>
+          </tbody>
+        </table>
+        <p>The higher pressure and temperature aren't arbitrary — they directly raise the average temperature at which heat is added in the Rankine cycle, which is what pushes cycle efficiency up. A few percentage points of efficiency translate into real coal savings and lower CO2 emissions per unit generated, which is exactly why India's newer capacity additions are almost all supercritical or ultra-supercritical.</p>
+
+        <h2>Feedwater System Protection Philosophy</h2>
+        <p>Whether a unit is subcritical or supercritical, the feedwater train — deaerator and condenser hotwell — still needs the same layered level-protection philosophy, because both equipment can flood or run dry regardless of boiler type:</p>
+        <ul>
+          <li><strong>Lo-Lo level (trip):</strong> Protects pumps from running dry / cavitating — typically interlocked to trip or block dependent equipment such as boiler feed pumps.</li>
+          <li><strong>Lo alarm:</strong> Warns the operator before the trip point is reached, giving time to correct makeup/extraction balance.</li>
+          <li><strong>Normal level band:</strong> The operating target maintained by level control valves during steady-state running.</li>
+          <li><strong>Hi alarm:</strong> Warns of an upward trend, often linked to an overflow/reject valve opening automatically.</li>
+          <li><strong>Hi-Hi level (trip):</strong> Protects against water carryover into steam lines or turbine — typically the highest-priority interlock in the loop.</li>
+        </ul>
+        <p>The exact millimetre setpoints differ from plant to plant and are set out in each unit's own C&amp;I documentation — what matters for exam purposes is understanding <em>why</em> this five-tier structure (Lo-Lo / Lo / Normal / Hi / Hi-Hi) exists on every major level loop in the plant, supercritical or not.</p>
+
+        <h2>Interview Questions &amp; Answers</h2>
+
+        <div class="faq-item">
+          <h3>Q1. Why doesn't a supercritical boiler have a steam drum?</h3>
+          <p><strong>A:</strong> Above the critical pressure of water (~221.2 bar), there is no distinct liquid and vapour phase to separate, so a drum — whose only job is to separate saturated water from saturated steam — serves no physical purpose. The boiler instead uses a once-through (Benson-type) design.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>Q2. What is a Boiler Circulating Pump (BCP) and when is it used?</h3>
+          <p><strong>A:</strong> A BCP forces additional water flow through the furnace waterwall tubes during startup and low-load operation (typically below ~30-35% load), when natural flow from the once-through design alone isn't enough to keep tube metal temperatures safe. It's normally taken out of service once load — and therefore natural flow — is high enough.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>Q3. Why is feedwater purity even more critical in a supercritical unit than a subcritical one?</h3>
+          <p><strong>A:</strong> A drum in a subcritical unit gives impurities somewhere to concentrate and be blown down; a once-through boiler has no such buffer, so any dissolved solids or silica travel straight through to the superheater and turbine, risking deposition and blade fouling.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>Q4. Why does higher steam pressure and temperature improve cycle efficiency?</h3>
+          <p><strong>A:</strong> In a Rankine cycle, efficiency improves as the average temperature at which heat is added to the working fluid rises. Higher boiler pressure and temperature raise this average, so supercritical units extract more work per unit of heat input than subcritical units.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>Q5. What is the practical difference between "supercritical" and "ultra-supercritical"?</h3>
+          <p><strong>A:</strong> Both are once-through, drum-less designs. "Ultra-supercritical" simply refers to units operating at even higher steam temperatures (commonly 593°C and above), pushing efficiency further — the terms describe a spectrum rather than a hard category boundary.</p>
+        </div>
+
+        <h2>Quick Revision Points</h2>
+        <ul>
+          <li>Supercritical = operating above water's critical point (~221.2 bar, 374°C) — no liquid/vapour phase distinction.</li>
+          <li>Once-through (Benson-type) boiler, no steam drum, unlike subcritical drum-type units.</li>
+          <li>Boiler Circulating Pump (BCP) assists flow at startup/low load; stopped at higher loads.</li>
+          <li>Higher pressure/temperature → higher average heat-addition temperature → higher Rankine cycle efficiency.</li>
+          <li>Feedwater purity requirements are stricter with no drum to buffer impurities.</li>
+          <li>Deaerator/hotwell level protection follows the same Lo-Lo/Lo/Normal/Hi/Hi-Hi philosophy regardless of boiler type.</li>
+        </ul>
+
+        <div class="related-links">
+          <h3>Keep Learning</h3>
+          <ul>
+            <li><a href="article-boiler-draught-system.html">Boiler Draught System — Interview Questions &amp; Answers</a></li>
+            <li><a href="article-ash-handling-plant.html">Ash Handling Plant Working Principle Explained</a></li>
+            <li><a href="mock-test.html">Take the free thermal power plant mock test</a></li>
+            <li><a href="ebooks.html">Get the 660 MW Supercritical Unit Operations Guide eBook — ₹349</a></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <aside>
+        <div class="card">
+          <span class="tag">New eBook</span>
+          <h3>660 MW Supercritical Unit Operations Guide</h3>
+          <p>Covers once-through boiler startup, BCP operation, feedwater purity control and supercritical-specific interview questions in full detail.</p>
+          <div class="price">₹349</div>
+          <a href="ebooks.html" class="btn btn-primary btn-block">View eBook</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="section-alt">
+  <div class="container">
+    <div class="email-signup">
+      <h3>Free PDF: 50 Most-Asked Power Plant Interview Questions</h3>
+      <p>Get more articles like this delivered to your inbox.</p>
+      <form class="signup-form" action="#" method="post">
+        <input type="email" name="email" placeholder="you@email.com" required aria-label="Email address">
+        <button type="submit" class="btn btn-primary">Send Me the Free PDF</button>
+      </form>
+      <p class="form-success">Thanks! Check your inbox for the free PDF shortly.</p>
+      <p class="form-note">No spam. Unsubscribe anytime.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <h4>IndustrialSkills</h4>
+        <p>Power plant exam and career resources written by a working Assistant Engineer at a 500 MW thermal power station.</p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="ebooks.html">eBooks</a></li>
+          <li><a href="articles.html">Articles</a></li>
+          <li><a href="mock-test.html">Mock Test</a></li>
+          <li><a href="about.html">About</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Articles</h4>
+        <ul>
+          <li><a href="article-boiler-draught-system.html">Boiler Draught System Q&amp;A</a></li>
+          <li><a href="article-ash-handling-plant.html">Ash Handling Plant Explained</a></li>
+          <li><a href="article-mppgcl-ae-mechanical-exam.html">MPPGCL AE Mechanical Exam Guide</a></li>
+          <li><a href="article-660mw-supercritical-unit-operations.html">660 MW Supercritical Unit Operations</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="contact.html">Contact Form</a></li>
+          <li><a href="https://wa.me/919999999999" target="_blank" rel="noopener">WhatsApp Us</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      &copy; 2026 IndustrialSkills. All rights reserved.
+    </div>
+  </div>
+</footer>
+
+<a href="https://wa.me/919999999999" class="whatsapp-float" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">&#128241;</a>
+
+<script src="script.js"></script>
+</body>
+</html>
